@@ -18,6 +18,17 @@ SPEC.loader.exec_module(search_jobs)
 
 
 class SearchJobsPlanTests(unittest.TestCase):
+    def test_plan_requires_employer_maintenance_before_discovery(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = search_jobs.write_search_plan(
+                today="2026-10-24", companies=[], profile={}, rules_text="",
+                out_dir=Path(directory),
+            )
+            plan = path.read_text()
+        self.assertLess(plan.index("## Employer expansion and weekly maintenance"), plan.index("scripts/discover_jobs_sharded.py"))
+        for required in ("README.md", "outputs/employer-research-state.json", "200", "setup_jobagent.py --check", "job_sources.yml", "not an employer-research engine"):
+            self.assertIn(required, plan)
+
     def test_human_search_rotation_prefers_company_specific_search_url(self) -> None:
         lines = search_jobs.format_human_search_companies(
             [

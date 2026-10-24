@@ -3,7 +3,24 @@ search_rules.md, candidate_evidence.json and both candidate profiles first. Use
 only this candidate's confirmed titles, skills, languages, metro, countries and
 work preferences. Keep the total site list at or below 200.
 
-Verify the configured timezone/run date. Generate the dated plan and execute its
+Verify the configured timezone/run date. Before discovery, follow README.md's
+"Employer expansion and weekly maintenance" procedure. Read
+outputs/employer-research-state.json. If setup expansion is missing, complete it
+and review the expanded shortlist with the candidate before the first search.
+On the first run of each candidate-local calendar week, recheck preferred and
+failed sources plus the oldest unchecked quarter; research 20–30 new prospects.
+Use official role/stack and hiring-location evidence, not snippets alone. Keep
+pending prospects out of runnable files; no-match weeks do not justify removal.
+Ask before removing a user-selected employer. Synchronize companies.yml,
+job_sources.yml, ats_registry.yml, startup_watchlist.yml and setup.answers.json;
+validate the 200-site ceiling with scripts/setup_jobagent.py --check via the
+project Python wrapper. Record counts, evidence, changes, failures and next themes
+in outputs/YYYY-MM-DD-employer-maintenance.md. Advance the weekly ledger date
+only after maintenance and validation complete. If web research is unavailable,
+report incomplete maintenance and search only previously validated sources.
+Python scanning alone does not perform employer expansion.
+
+Generate the dated plan and execute its
 discovery, local application-history reconciliation and strict-review steps.
 External tracking remains disabled unless this candidate has explicitly approved
 and tested an adapter and its recurring read scope. Never discover databases or
