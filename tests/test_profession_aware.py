@@ -28,6 +28,7 @@ class ProfessionAwareTests(unittest.TestCase):
             ("Sales", "Account Executive", "negotiation", "enterprise sales"),
             ("Customer service", "Customer Service Representative", "customer support", "insurance license"),
             ("Administration", "Administrative Assistant", "calendar management", "payroll processing"),
+            ("Project Management", "Project Manager", "stakeholder management", "PMP certification"),
         ]:
             with self.subTest(profession=profession), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)

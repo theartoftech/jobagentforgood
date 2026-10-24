@@ -8,6 +8,10 @@ Use profession-relevant responsibilities, results, credentials and transferable
 skills. Empty tools lists are valid. Never inject programming/cloud requirements
 or an engineering seniority ladder into another profession. For legacy profiles,
 ask only missing career-context questions and update private files in place.
+For Project Management, use confirmed industries, project scope, delivery methods,
+stakeholder responsibilities and credentials. Do not assume software delivery,
+PMP certification, or equivalence with product/program management; confirm adjacent
+titles against the candidate's experience and preferences.
 
 Verify the configured timezone/run date. Before discovery, follow README.md's
 "Employer expansion and weekly maintenance" procedure. Read
