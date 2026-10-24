@@ -37,6 +37,13 @@ and tested an adapter and its recurring read scope. Never discover databases or
 reuse another environment's tracker settings. Report tracker failures; do not
 replace missing history with an empty list. Analytics publication needs separate
 write authorization and is disabled by default.
+Read application_tracking in candidate_evidence.json. Preserve the candidate's
+local/install/connect choice; do not repeat an answered onboarding question or
+install JobTracker during a scheduled run. If guided setup is incomplete, report
+the saved next step and continue local discovery. If recurring tracker reads were
+approved, perform the recorded, tested read/export conversion before local history
+reconciliation. Otherwise report that external history was not refreshed. Never
+interpret installation or a stored endpoint as automatic sync or write consent.
 Open LinkedIn Jobs in the internal browser for additional hits if available;
 otherwise report that gap and provide search links. Resolve all discoveries to
 live official employer/ATS pages. Inspect complete required qualifications, salary
