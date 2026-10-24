@@ -29,7 +29,6 @@ else:
     from mark_applied_jobs import extract_requisition_id
 
 
-DEFAULT_TRACKER_ENDPOINT = "http://127.0.0.1:8086/api/analytics/workflow-runs"
 TOKEN_ENVIRONMENT_VARIABLE = "JOBTRACKER_ANALYTICS_IMPORT_TOKEN"
 ENDPOINT_ENVIRONMENT_VARIABLE = "JOBTRACKER_ANALYTICS_URL"
 LOCATION_MAXIMUM = 300
@@ -464,19 +463,27 @@ def main() -> int:
     parser.add_argument("--date", required=True)
     parser.add_argument(
         "--tracker-url",
-        default=os.environ.get(ENDPOINT_ENVIRONMENT_VARIABLE, DEFAULT_TRACKER_ENDPOINT),
+        help="Approved compatible analytics endpoint; requires --publish",
     )
     parser.add_argument("--timeout-seconds", type=int, default=30)
     parser.add_argument(
         "--ssh-host",
         help="Publish through this host using its Kubernetes secret; no local token is read.",
     )
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--publish", action="store_true", help="Publish only after separate user authorization for analytics writes")
+    mode.add_argument(
         "--export-only",
         action="store_true",
         help="Write the contract artifact without POSTing it (for diagnostics or credential setup).",
     )
     args = parser.parse_args()
+    if args.publish:
+        args.tracker_url = args.tracker_url or os.environ.get(ENDPOINT_ENVIRONMENT_VARIABLE)
+        if not (args.tracker_url or "").strip():
+            parser.error("Publication requires an explicitly configured analytics endpoint")
+    elif args.ssh_host or args.tracker_url:
+        parser.error("External publication is disabled; obtain permission before using --publish")
 
     expected_date = validate_date(args.date)
     review, source_bytes = load_json_object(args.workflow_review)
@@ -491,7 +498,7 @@ def main() -> int:
     artifact_path = args.out / f"{expected_date}-skill-gap-observations.json"
     write_import_payload(artifact_path, payload)
     print(f"Wrote {artifact_path} ({len(payload['postings'])} postings)")
-    if args.export_only:
+    if not args.publish:
         print("Export-only mode: jobtracker import was not attempted")
         return 0
 

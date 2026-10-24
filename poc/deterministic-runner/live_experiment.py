@@ -154,7 +154,7 @@ def build_live_stages(
     ]
     analytics_outputs = (analytics_artifact,)
     if publish_analytics:
-        analytics_arguments.extend(("--ssh-host", cast(str, analytics_ssh_host)))
+        analytics_arguments.extend(("--publish", "--ssh-host", cast(str, analytics_ssh_host)))
         analytics_outputs = (analytics_artifact, analytics_result)
     else:
         analytics_arguments.append("--export-only")
@@ -258,6 +258,8 @@ def build_live_stages(
             "tracker_before_review",
             command(
                 "mark_applied_jobs.py",
+                "--local-applied",
+                str(repo_root / "applied_jobs.json"),
                 "--daily-report",
                 str(daily),
                 "--applied-jobs-out",
@@ -310,6 +312,8 @@ def build_live_stages(
             "tracker_after_sync",
             command(
                 "mark_applied_jobs.py",
+                "--local-applied",
+                str(repo_root / "applied_jobs.json"),
                 "--daily-report",
                 str(daily),
                 "--applied-jobs-out",

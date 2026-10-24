@@ -35,11 +35,6 @@ except ModuleNotFoundError:
     yaml = None
 
 try:
-    from scripts.mark_applied_jobs import DEFAULT_JOBTRACKER_SSH_HOST
-except ModuleNotFoundError:
-    from mark_applied_jobs import DEFAULT_JOBTRACKER_SSH_HOST
-
-try:
     from scripts.job_override_dates import filter_companies_by_overrides
 except ModuleNotFoundError:
     from job_override_dates import filter_companies_by_overrides
@@ -420,7 +415,7 @@ def write_report_template(
         "- Prefer official company job URLs.",
         "- Do not recommend stretch jobs.",
         "- Carry forward active roles from the latest strict workflow review until the candidate applies or the role is clearly no longer usable.",
-        "- Remove roles from the active carry-forward set after jobtracker marks them as already applied.",
+        "- Remove roles from the active carry-forward set after local application history confirms they were applied to.",
         "- Treat manually surfaced official live job URLs as valid candidate inputs for the current report after live verification.",
         "- Treat browser-reviewed job findings from LinkedIn, Indeed, or any other site as manual intake: preserve the source, resolve the official URL, and include qualifying roles in this dated report.",
         "- Use AI Apply MCP only for bounded read-only discovery and application-status reconciliation; resolve an official company or ATS posting before promotion, never treat an AI Apply internal job ID as an employer requisition ID, and never call queue_job_for_review or submit_application.",

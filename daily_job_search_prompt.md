@@ -5,6 +5,11 @@ work preferences. Keep the total site list at or below 200.
 
 Verify the configured timezone/run date. Generate the dated plan and execute its
 discovery, local application-history reconciliation and strict-review steps.
+External tracking remains disabled unless this candidate has explicitly approved
+and tested an adapter and its recurring read scope. Never discover databases or
+reuse another environment's tracker settings. Report tracker failures; do not
+replace missing history with an empty list. Analytics publication needs separate
+write authorization and is disabled by default.
 Open LinkedIn Jobs in the internal browser for additional hits if available;
 otherwise report that gap and provide search links. Resolve all discoveries to
 live official employer/ATS pages. Inspect complete required qualifications, salary

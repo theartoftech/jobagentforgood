@@ -2,10 +2,17 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
+import os
+import sqlite3
+import subprocess
+import sys
 from pathlib import Path
+from unittest import mock
+
+from scripts import mark_applied_jobs
 
 from scripts.mark_applied_jobs import (
-    DEFAULT_JOBTRACKER_SSH_HOST,
     ReportJob,
     TrackerJob,
     extract_requisition_id,
@@ -17,8 +24,82 @@ from scripts.mark_applied_jobs import (
 
 
 class MarkAppliedJobsTests(unittest.TestCase):
-    def test_default_jobtracker_host_uses_ssh_alias(self) -> None:
-        self.assertEqual("jobtracker-host", DEFAULT_JOBTRACKER_SSH_HOST)
+    def test_default_uses_local_history_even_with_tracker_environment(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "report.md"
+            report.write_text("# Jobs\n")
+            write_tracker_jobs_snapshot(root / "applied_jobs.json", jobs=[], ssh_host="local")
+            with mock.patch("sys.argv", ["mark", "--daily-report", str(report)]), mock.patch.dict(os.environ, {"JOBTRACKER_SSH_HOST": "old-host", "JOBTRACKER_DB_PATH": "/old.db"}), mock.patch.object(mark_applied_jobs, "fetch_tracker_jobs") as remote:
+                previous = Path.cwd()
+                try:
+                    os.chdir(root)
+                    mark_applied_jobs.main()
+                finally:
+                    os.chdir(previous)
+                remote.assert_not_called()
+
+    def test_external_read_requires_opt_in_and_complete_configuration(self) -> None:
+        cases = [
+            ["--ssh-host", "host", "--jobtracker-db-path", "/data/jobs.db"],
+            ["--enable-jobtracker-read"],
+            ["--enable-jobtracker-read", "--ssh-host", "host"],
+            ["--enable-jobtracker-read", "--jobtracker-db-path", "/data/jobs.db"],
+            ["--enable-jobtracker-read", "--ssh-host", "host", "--jobtracker-db-path", "/data/jobs.db", "--local-applied", "local.json"],
+        ]
+        for arguments in cases:
+            with self.subTest(arguments=arguments), mock.patch.dict(os.environ, {}, clear=True), mock.patch("sys.argv", ["mark", "--daily-report", "missing.md", *arguments]), mock.patch.object(mark_applied_jobs, "fetch_tracker_jobs") as remote:
+                with self.assertRaises(SystemExit):
+                    mark_applied_jobs.main()
+                remote.assert_not_called()
+
+    def test_opted_in_tracker_read_and_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "report.md"
+            report.write_text("# Jobs\n")
+            output = root / "snapshot.json"
+            with mock.patch("sys.argv", ["mark", "--daily-report", str(report), "--enable-jobtracker-read", "--ssh-host", "approved-host", "--jobtracker-db-path", "/approved.db", "--applied-jobs-out", str(output)]), mock.patch.object(mark_applied_jobs, "fetch_tracker_jobs", return_value=[]) as remote:
+                mark_applied_jobs.main()
+                remote.assert_called_once_with("approved-host", "/approved.db")
+            self.assertEqual(json.loads(output.read_text())["ssh_host"], "approved-host")
+
+    def test_tracker_sqlite_connection_is_read_only(self) -> None:
+        with mock.patch.object(mark_applied_jobs.subprocess, "run", return_value=mock.Mock(stdout="[]")) as run:
+            self.assertEqual([], mark_applied_jobs.fetch_tracker_jobs("approved-host", "/approved.db"))
+        program = run.call_args.kwargs["input"]
+        self.assertIn("mode=ro", program)
+        self.assertIn("uri=True", program)
+
+    def test_approved_legacy_query_reads_real_sqlite_without_creating_missing_database(self) -> None:
+        execute = subprocess.run
+
+        def run_remote_locally(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+            return execute([sys.executable, "-"], **kwargs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "tracker.db"
+            with sqlite3.connect(path) as database:
+                database.execute("create table jobs (data text)")
+                database.execute("insert into jobs values (?)", (json.dumps({"company": "Example", "status": "applied", "jobUrl": "https://example.com/jobs/123"}),))
+            original = path.read_bytes()
+            with mock.patch.object(mark_applied_jobs.subprocess, "run", side_effect=run_remote_locally):
+                jobs = mark_applied_jobs.fetch_tracker_jobs("approved-host", str(path))
+                self.assertEqual("Example", jobs[0].company)
+                self.assertTrue(jobs[0].already_applied)
+                missing = path.parent / "missing.db"
+                with self.assertRaises(subprocess.CalledProcessError):
+                    mark_applied_jobs.fetch_tracker_jobs("approved-host", str(missing))
+                self.assertFalse(missing.exists())
+            self.assertEqual(original, path.read_bytes())
+
+    def test_missing_local_history_never_falls_back_to_remote(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.json"
+            with mock.patch("sys.argv", ["mark", "--daily-report", "missing.md", "--local-applied", str(missing)]), mock.patch.object(mark_applied_jobs, "fetch_tracker_jobs") as remote:
+                with self.assertRaises(FileNotFoundError):
+                    mark_applied_jobs.main()
+                remote.assert_not_called()
 
     def test_update_section_marks_new_discovery_candidate_heading(self) -> None:
         lines = [

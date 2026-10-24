@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+from urllib.error import HTTPError, URLError
+from scripts import publish_skill_gap_analytics as analytics
 
 from scripts.publish_skill_gap_analytics import (
     AnalyticsPublishError,
@@ -35,6 +39,77 @@ class _Response:
 
 
 class PublishSkillGapAnalyticsTests(unittest.TestCase):
+    def test_publication_errors_are_explicit(self) -> None:
+        for error in (URLError("offline"), HTTPError("https://example.com", 403, "denied", {}, io.BytesIO(b"denied"))):
+            with self.subTest(error=error), mock.patch.object(analytics, "urlopen", side_effect=error):
+                with self.assertRaises(AnalyticsPublishError):
+                    publish_payload(endpoint="https://example.com", token="test", payload={}, timeout_seconds=1)
+        for response in (_Response({}, status=500), _Response({})):
+            response._body = b"invalid json"
+            with self.subTest(status=response.status), mock.patch.object(analytics, "urlopen", return_value=response):
+                with self.assertRaises(AnalyticsPublishError):
+                    publish_payload(endpoint="https://example.com", token="test", payload={}, timeout_seconds=1)
+        with self.assertRaises(ValueError):
+            publish_payload(endpoint="https://example.com", token="test", payload={}, timeout_seconds=0)
+
+    def test_ssh_failures_and_invalid_settings_are_explicit(self) -> None:
+        for host, timeout in (("", 1), ("approved-host", 0)):
+            with self.assertRaises(ValueError):
+                publish_payload_via_ssh(ssh_host=host, endpoint="http://localhost", payload={}, timeout_seconds=timeout)
+        for output in ("invalid json", "[]", '{"ok":false}'):
+            with self.subTest(output=output), mock.patch.object(analytics.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=output)):
+                with self.assertRaises(AnalyticsPublishError):
+                    publish_payload_via_ssh(ssh_host="approved-host", endpoint="http://localhost", payload={}, timeout_seconds=1)
+        with mock.patch.object(analytics.subprocess, "run", side_effect=subprocess.TimeoutExpired("ssh", 21)):
+            with self.assertRaisesRegex(AnalyticsPublishError, "timed out"):
+                publish_payload_via_ssh(ssh_host="approved-host", endpoint="http://localhost", payload={}, timeout_seconds=1)
+
+    def test_invalid_import_dates_and_shapes_are_rejected(self) -> None:
+        for value in (None, "not-a-date", "20261024"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                analytics.validate_date(value)
+        for reviews in (None, ["not an object"], [{}] * 501):
+            with self.subTest(reviews_type=type(reviews)), self.assertRaises(ValueError):
+                build_import_payload(review={"generated_on": "2026-10-24", "reviews": reviews}, source_artifact_name="review.json", source_bytes=b"{}", workflow_profile_bytes=b"{}", expected_date="2026-10-24")
+        for name in ("", "x" * 256):
+            with self.assertRaises(ValueError):
+                build_import_payload(review={"generated_on": "2026-10-24", "reviews": []}, source_artifact_name=name, source_bytes=b"{}", workflow_profile_bytes=b"{}", expected_date="2026-10-24")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad.json"
+            path.write_text("[]")
+            with self.assertRaises(ValueError):
+                analytics.load_json_object(path)
+
+    def test_cli_defaults_to_export_without_network(self) -> None:
+        self.check_cli_publication([], expected=None)
+        self.check_cli_publication(["--export-only"], expected=None)
+
+    def test_cli_requires_publication_consent_and_destination(self) -> None:
+        for arguments in (["--ssh-host", "host"], ["--tracker-url", "https://example.com/import"], ["--publish"], ["--publish", "--export-only"]):
+            with self.subTest(arguments=arguments), mock.patch.dict("os.environ", {}, clear=True), mock.patch("sys.argv", ["analytics", "--workflow-review", "missing.json", "--date", "2026-10-24", *arguments]), mock.patch.object(analytics, "publish_payload") as http, mock.patch.object(analytics, "publish_payload_via_ssh") as ssh:
+                with self.assertRaises(SystemExit):
+                    analytics.main()
+                http.assert_not_called()
+                ssh.assert_not_called()
+
+    def test_cli_explicit_publication_uses_selected_transport(self) -> None:
+        self.check_cli_publication(["--publish", "--tracker-url", "https://example.com/import"], expected="http")
+        self.check_cli_publication(["--publish", "--tracker-url", "http://localhost:8080/import", "--ssh-host", "approved-host"], expected="ssh")
+
+    def check_cli_publication(self, arguments: list[str], *, expected: str | None) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            review = root / "review.json"
+            review.write_text(json.dumps({"generated_on": "2026-10-24", "reviews": []}))
+            profile = root / "profile.yml"
+            profile.write_text("{}")
+            with mock.patch("sys.argv", ["analytics", "--workflow-review", str(review), "--workflow-profile", str(profile), "--date", "2026-10-24", "--out", str(root), *arguments]), mock.patch.object(analytics, "publish_payload", return_value={"ok": True}) as http, mock.patch.object(analytics, "publish_payload_via_ssh", return_value={"ok": True}) as ssh:
+                self.assertEqual(0, analytics.main())
+                self.assertEqual(int(expected == "http"), http.call_count)
+                self.assertEqual(int(expected == "ssh"), ssh.call_count)
+            self.assertTrue((root / "2026-10-24-skill-gap-observations.json").is_file())
+            self.assertEqual(expected is not None, (root / "2026-10-24-skill-gap-import-result.json").exists())
+
     def test_map_work_model_treats_uncommitted_office_flex_as_unspecified(self) -> None:
         self.assertEqual("unspecified", map_work_model("Atlanta office/flex not stated"))
 

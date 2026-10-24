@@ -99,6 +99,11 @@ class LivePlanTests(unittest.TestCase):
             analytics_ssh_host="jobtracker-host",
         )
         self.assertIn("--ssh-host", stages[11].argv)
+        self.assertIn("--publish", stages[11].argv)
+        for stage in stages:
+            if stage.name in ("tracker_before_review", "tracker_after_sync"):
+                self.assertIn("--local-applied", stage.argv)
+                self.assertIn("/repo/applied_jobs.json", stage.argv)
         self.assertIn("jobtracker-host", stages[11].argv)
         self.assertNotIn("--export-only", stages[11].argv)
 

@@ -17,13 +17,13 @@ The initial experiment supports two modes:
   carry-forward, and requires exact role-by-role decision and
   resume-authorization parity.
 - `run_live_experiment.py` is an isolated live deterministic-core run. It runs
-  live ATS discovery, JobTracker reconciliation, review, networking, rendering,
+  live ATS discovery, local application-history reconciliation, review, networking, rendering,
   validated document production, export-only analytics, and targeted tests.
   It records external sources that cannot be exercised by the local runner.
 
 Neither mode submits applications. The live mode defaults analytics to
 export-only; publication requires both `--publish-analytics` and an explicit
-`--analytics-ssh-host`. AI Apply, BlitzAPI, and browser-board passes remain
+`--analytics-ssh-host`, plus an approved `JOBTRACKER_ANALYTICS_URL` and a compatible legacy deployment. AI Apply, BlitzAPI, and browser-board passes remain
 explicitly outside the local runner until supported adapters exist.
 
 ## Run
@@ -66,4 +66,4 @@ create, copy, or persist an API key in this repository.
 .venv/bin/python -m coverage report --fail-under=90
 ```
 
-Generated experiment results are local and ignored by Git. This advanced runner requires existing discovery state, document templates, networking inputs and an explicitly configured JobTracker integration. Use the root README for fresh onboarding.
+Generated experiment results are local and ignored by Git. This advanced runner requires existing discovery state, document templates, networking inputs and local `applied_jobs.json`. External JobTracker access is not required. Use the root README for fresh onboarding and optional integration permissions.

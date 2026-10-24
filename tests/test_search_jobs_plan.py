@@ -140,7 +140,7 @@ class SearchJobsPlanTests(unittest.TestCase):
         self.assertIn("## Gap Questions for Candidate", markdown)
         self.assertIn("| Priority | Company | Role | Public Freshness Signal |", markdown)
         self.assertIn("Carry forward active roles from the latest strict workflow review", markdown)
-        self.assertIn("Remove roles from the active carry-forward set after jobtracker marks them as already applied", markdown)
+        self.assertIn("Remove roles from the active carry-forward set after local application history confirms they were applied to", markdown)
         self.assertIn("manually surfaced official live job URLs", markdown)
         self.assertIn(
             "browser-reviewed job findings from LinkedIn, Indeed, or any other site",

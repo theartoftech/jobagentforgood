@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 """
-Annotate a daily job-search report with "Already Applied" status from jobtracker.
-
-The script reads application history from the remote jobtracker SQLite database
-through the configured SSH host, then updates the Apply and
-Maybe tables in the Markdown report by appending an "Already Applied" column.
+Annotate a daily job-search report using local application history by default.
+The legacy JobTracker SQLite adapter requires explicit read permission and configuration.
 """
 
 from __future__ import annotations
@@ -21,7 +18,6 @@ from typing import Iterable
 from urllib.parse import urlsplit
 
 
-DEFAULT_JOBTRACKER_SSH_HOST = "jobtracker-host"
 INTEREST_ONLY_STATUSES = {"interested", "archived", ""}
 
 
@@ -88,8 +84,9 @@ def fetch_tracker_jobs(ssh_host: str, db_path: str) -> list[TrackerJob]:
     remote_python = f"""
 import json
 import sqlite3
+from pathlib import Path
 
-db = sqlite3.connect({db_path!r})
+db = sqlite3.connect(Path({db_path!r}).resolve().as_uri() + "?mode=ro", uri=True)
 db.row_factory = sqlite3.Row
 rows = db.execute("select data from jobs").fetchall()
 jobs = []
@@ -295,19 +292,31 @@ def main() -> None:
     parser.add_argument("--daily-report", required=True, type=Path)
     parser.add_argument(
         "--ssh-host",
-        default=os.environ.get("JOBTRACKER_SSH_HOST", DEFAULT_JOBTRACKER_SSH_HOST),
+        help="Approved SSH host for the legacy JobTracker adapter; requires --enable-jobtracker-read",
     )
     parser.add_argument(
         "--jobtracker-db-path",
-        default=os.environ.get("JOBTRACKER_DB_PATH", "/var/lib/jobtracker/jobtracker.db"),
+        help="Approved SQLite database path; requires --enable-jobtracker-read",
     )
+    parser.add_argument("--enable-jobtracker-read", action="store_true", help="Use only after the user approves read-only access and the legacy schema is verified")
     parser.add_argument("--applied-jobs-out", type=Path)
     parser.add_argument("--local-applied", type=Path, help="Candidate-maintained local applied-job snapshot; avoids SSH")
     args = parser.parse_args()
 
-    tracker_jobs = (load_tracker_jobs_snapshot(args.local_applied) if args.local_applied else fetch_tracker_jobs(args.ssh_host, args.jobtracker_db_path))
-    if args.local_applied:
-        args.ssh_host = "local-candidate-record"
+    if args.enable_jobtracker_read:
+        if args.local_applied:
+            parser.error("Choose local history or the approved JobTracker adapter, not both")
+        args.ssh_host = args.ssh_host or os.environ.get("JOBTRACKER_SSH_HOST")
+        args.jobtracker_db_path = args.jobtracker_db_path or os.environ.get("JOBTRACKER_DB_PATH")
+        if not (args.ssh_host or "").strip() or not (args.jobtracker_db_path or "").strip():
+            parser.error("Approved JobTracker reads require both an SSH host and database path")
+        tracker_jobs = fetch_tracker_jobs(args.ssh_host, args.jobtracker_db_path)
+        source = args.ssh_host
+    else:
+        if args.ssh_host or args.jobtracker_db_path:
+            parser.error("External tracking is disabled; obtain permission before using --enable-jobtracker-read")
+        tracker_jobs = load_tracker_jobs_snapshot(args.local_applied or Path("applied_jobs.json"))
+        source = "local-candidate-record"
     lines = args.daily_report.read_text(encoding="utf-8").splitlines()
     updated = lines
     for section_name in (
@@ -319,9 +328,9 @@ def main() -> None:
         updated = update_section(updated, section_name, tracker_jobs)
     args.daily_report.write_text("\n".join(updated) + "\n", encoding="utf-8")
     if args.applied_jobs_out is not None:
-        write_tracker_jobs_snapshot(args.applied_jobs_out, jobs=tracker_jobs, ssh_host=args.ssh_host)
+        write_tracker_jobs_snapshot(args.applied_jobs_out, jobs=tracker_jobs, ssh_host=source)
     print(f"Updated daily report: {args.daily_report}")
-    print(f"Fetched {len(tracker_jobs)} tracker jobs from {args.ssh_host}")
+    print(f"Loaded {len(tracker_jobs)} application-history records from {source}")
     if args.applied_jobs_out is not None:
         print(f"Wrote applied-jobs snapshot: {args.applied_jobs_out}")
 
