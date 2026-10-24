@@ -8,11 +8,11 @@ No model API key, paid job-search service, private server or external applicatio
 
 Install Git and **Python 3.11 or newer** (including pip and venv). A supported Python distribution from [python.org](https://www.python.org/downloads/) is sufficient. Windows users should use WSL with Python/Git/Bash for the commands below. macOS and Linux use a terminal with Bash. Public ATS requests also use `curl` where available; install it if your system does not provide it.
 
-Substitute the repository URL and public branch supplied by the maintainer:
+Clone the public repository:
 
 ```bash
-git clone --single-branch --branch PUBLIC_BRANCH REPOSITORY_URL jobagent
-cd jobagent
+git clone https://github.com/theartoftech/jobagentforgood.git
+cd jobagentforgood
 python3 -m venv .venv
 scripts/jobagent_python.sh -m pip install -r requirements-dev.txt
 scripts/jobagent_python.sh -m unittest discover -s tests
