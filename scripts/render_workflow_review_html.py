@@ -698,8 +698,8 @@ li + li {{ margin-top:5px; }}
 </nav>
 <div class="content-grid">
   <section class="section"><h2>Why it fits</h2>{render_detail_list(record.direct_matches, empty_text='No direct matches recorded.')}</section>
-  <section class="section"><h2>Technical gaps</h2><h3>Required</h3>{render_detail_list(record.required_gaps)}<h3>Preferred / positioning</h3>{render_detail_list(record.preferred_gaps)}<h3>Resolved answers</h3>{render_detail_list(resolved_gap_items)}</section>
-  <section class="section wide"><h2>Seniority / scope risks</h2>{render_detail_list(record.seniority_scope_risks)}<h3>Interview positioning</h3><div class="positioning">{escape(record.interview_positioning_note or 'Use standard technical interview positioning.')}</div></section>
+  <section class="section"><h2>Qualification gaps</h2><h3>Required</h3>{render_detail_list(record.required_gaps)}<h3>Preferred / positioning</h3>{render_detail_list(record.preferred_gaps)}<h3>Resolved answers</h3>{render_detail_list(resolved_gap_items)}</section>
+  <section class="section wide"><h2>Seniority / scope risks</h2>{render_detail_list(record.seniority_scope_risks)}<h3>Interview positioning</h3><div class="positioning">{escape(record.interview_positioning_note or 'Use confirmed experience relevant to this role.')}</div></section>
   <section class="section"><h2>Other review signals</h2><h3>Risk flags</h3>{render_detail_list(record.risk_flags)}<h3>Hard blockers</h3>{render_detail_list(record.hard_blockers)}</section>
   <section class="section"><h2>Questions for Candidate</h2>{render_detail_list(record.questions_for_candidate, empty_text='No unresolved questions.')}</section>
   <section class="section wide"><h2>Recommended action</h2><div class="final-action">{escape(record.final_action or 'No action supplied.')}</div></section>

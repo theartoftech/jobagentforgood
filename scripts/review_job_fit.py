@@ -82,6 +82,12 @@ else:
     from render_workflow_review_html import write_workflow_review_html
 
 
+try:
+    from scripts.career_context import compensation_review
+except ModuleNotFoundError:
+    from career_context import compensation_review
+
+
 REQUIRED_MARKERS = (
     "required",
     "must have",
@@ -695,7 +701,9 @@ def detect_hard_blockers(
             unsupported_platforms=workflow_profile.get("unsupported_primary_platforms", []) or [],
         )
     )
-    published_maximum = published_annual_compensation_maximum(text) if workflow_profile.get("salary_currency", "USD") == "USD" else None
+    pay_blockers, _, pay_review_needed = compensation_review(text, str(job.get("url", "")), workflow_profile)
+    blockers.extend(pay_blockers)
+    published_maximum = published_annual_compensation_maximum(text) if not pay_review_needed and workflow_profile.get("salary_currency", "USD") == "USD" else None
     if (
         salary_floor is not None
         and published_maximum is not None
@@ -899,6 +907,9 @@ def classify_review(
         unresolved_preferred_gaps,
         workflow_decision,
     )
+    _, pay_questions, _ = compensation_review(text, str(job.get("url", "")), workflow_profile)
+    if not already_applied:
+        questions.extend(pay_questions)
     gap_questions_needed = bool(questions)
     strategic_company = is_strategic_company(str(job.get("company", "")), workflow_profile)
     explicit_seniority_approval = has_seniority_approval(job, workflow_profile)
@@ -934,6 +945,8 @@ def classify_review(
         final_action = "Verify the live official posting before the resume workflow."
     if 'incomplete qualification evidence; refresh official posting' in blockers:
         final_action = 'Refresh the full official qualifications before the resume workflow.'
+    if pay_questions and not blockers:
+        final_action = "Hold resume workflow until compensation is verified against candidate preferences."
     if already_applied:
         final_action = "Already applied — do not generate another resume."
     elif overqualified_risk == "high" and not seniority_allows_resume and workflow_decision in {
@@ -1085,10 +1098,10 @@ def format_packet(review: WorkflowReview) -> list[str]:
         "Why it fits / direct matches:",
         *markdown_list(review.direct_matches),
         "",
-        "Technical gaps — required:",
+        "Qualification gaps — required:",
         *markdown_list(review.required_gaps),
         "",
-        "Technical gaps — preferred/positioning:",
+        "Qualification gaps — preferred/positioning:",
         *markdown_list(review.preferred_gaps),
         "",
         "Resolved gap answers:",

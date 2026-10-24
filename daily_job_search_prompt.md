@@ -1,7 +1,13 @@
 Run this checkout's configured job search. Read README.md, run_preferences.json,
 search_rules.md, candidate_evidence.json and both candidate profiles first. Use
-only this candidate's confirmed titles, skills, languages, metro, countries and
+only this candidate's confirmed profession, titles, capabilities, languages, metro, countries and
 work preferences. Keep the total site list at or below 200.
+
+Read career_context before choosing questions, search terms or adjacent roles.
+Use profession-relevant responsibilities, results, credentials and transferable
+skills. Empty tools lists are valid. Never inject programming/cloud requirements
+or an engineering seniority ladder into another profession. For legacy profiles,
+ask only missing career-context questions and update private files in place.
 
 Verify the configured timezone/run date. Before discovery, follow README.md's
 "Employer expansion and weekly maintenance" procedure. Read
@@ -9,7 +15,7 @@ outputs/employer-research-state.json. If setup expansion is missing, complete it
 and review the expanded shortlist with the candidate before the first search.
 On the first run of each candidate-local calendar week, recheck preferred and
 failed sources plus the oldest unchecked quarter; research 20–30 new prospects.
-Use official role/stack and hiring-location evidence, not snippets alone. Keep
+Use official role/responsibility and hiring-location evidence, not snippets alone. Keep
 pending prospects out of runnable files; no-match weeks do not justify removal.
 Ask before removing a user-selected employer. Synchronize companies.yml,
 job_sources.yml, ats_registry.yml, startup_watchlist.yml and setup.answers.json;
@@ -31,6 +37,12 @@ Open LinkedIn Jobs in the internal browser for additional hits if available;
 otherwise report that gap and provide search links. Resolve all discoveries to
 live official employer/ATS pages. Inspect complete required qualifications, salary
 currency, location restrictions and language/authorization evidence before review.
+Review guaranteed base pay separately from commission/OTE, pay period and total
+earnings targets in compensation_preferences. Resolve compensation holds with
+evidence in exact-URL compensation_reviews; remove stale reviews when preferences
+or posting terms change. Never infer annual conversions or use OTE as base pay.
+Check required licenses and credentials by jurisdiction; preferred qualifications
+alone are not blockers.
 Ask about missing experience; never invent it or import another candidate's rules.
 
 Report new actionable verified roles, gaps/questions, applied matches and source

@@ -1099,7 +1099,7 @@ def is_valid_workday_board(url: str) -> bool:
         response = request_json(
             endpoint,
             method="POST",
-            payload={"appliedFacets": {}, "limit": 1, "offset": 0, "searchText": "software"},
+            payload={"appliedFacets": {}, "limit": 1, "offset": 0, "searchText": ""},
             timeout=8,
         )
     except (HTTPError, URLError, TimeoutError, ValueError, json.JSONDecodeError):
@@ -1129,15 +1129,11 @@ def dedupe_case_insensitive(values: list[str]) -> list[str]:
     return result
 
 
-def title_specificity_sort_key(value: str) -> tuple[int, int, str]:
+def title_specificity_sort_key(value: str) -> tuple[int, str]:
+    # Prefer specific phrases without imposing one profession's seniority ladder.
     normalized = value.casefold()
-    seniority_weight = 0
-    for index, token in enumerate(["principal", "staff", "lead", "senior"]):
-        if token in normalized:
-            seniority_weight = len(["principal", "staff", "lead", "senior"]) - index
-            break
-    word_count = len([part for part in re.split(r"\s+", value.strip()) if part])
-    return (-seniority_weight, -word_count, normalized)
+    word_count = len(value.split())
+    return (-word_count, normalized)
 
 
 class Adapter:

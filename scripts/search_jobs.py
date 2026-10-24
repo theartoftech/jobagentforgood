@@ -292,7 +292,19 @@ def format_profile_summary(profile: dict[str, Any]) -> str:
     locations = profile.get("locations", {})
 
     lines: list[str] = []
-
+    context = profile.get("career_context", {})
+    lines.append("### Career context")
+    if context:
+        lines.extend([f"- Profession: {context['profession']}", f"- Level: {context['experience_level']}"])
+        for key in ("specializations", "transferable_skills", "tools", "credentials"):
+            lines.append(f"- {key.replace('_', ' ').capitalize()}: {', '.join(context[key]) or 'None confirmed'}")
+    else:
+        lines.append("Career context has not been recorded; ask about the candidate's profession and responsibilities before assuming requirements.")
+    pay = profile.get("compensation_preferences")
+    if pay:
+        lines.extend(["", "### Compensation preferences", f"- {json.dumps(pay, ensure_ascii=False)}",
+                      "Verify base pay separately from OTE/commission; do not infer annual conversions."])
+    lines.append("")
     lines.append("### Strong-match keywords")
     for keyword in strong_keywords:
         lines.append(f"- {keyword}")
@@ -350,6 +362,7 @@ def write_search_plan(
              f"scripts/jobagent_python.sh scripts/build_job_inspection_queue.py --discovered-jobs {out_dir}/{today}-discovered-jobs.json --out {out_dir} --date {today}",
              f"scripts/jobagent_python.sh scripts/mark_applied_jobs.py --daily-report {out_dir}/{today}-daily-job-search.md --local-applied applied_jobs.json --applied-jobs-out {out_dir}/{today}-applied-jobs.json",
              "```", "",
+             "Adapt follow-up questions to career_context and confirmed responsibilities. Check role-specific credentials, licenses and results; do not inject tools or qualifications from another profession.",
              "Before strict review, inspect full official descriptions against confirmed candidate evidence. Record all unknown required qualifications, language fluency, work authorization, sponsorship, employment type, travel and compensation currency as gaps. Do not treat keyword scores as complete qualification checks.",
              "```bash",
              f"scripts/jobagent_python.sh scripts/review_job_fit.py --discovered-jobs {out_dir}/{today}-discovered-jobs.json --workflow-profile candidate_workflow_profile.yml --applied-jobs {out_dir}/{today}-applied-jobs.json --out {out_dir} --date {today}",

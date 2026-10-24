@@ -33,5 +33,20 @@
   "companies": [],
   "applied_jobs": [],
   "manual_jobs": [],
-  "resume_path": ""
+  "resume_path": "",
+  "career_context": {
+    "profession": "",
+    "experience_level": "",
+    "specializations": [],
+    "transferable_skills": [],
+    "tools": [],
+    "credentials": []
+  },
+  "compensation_preferences": {
+    "base_pay_period": "annual",
+    "minimum_base": 0,
+    "target_total_annual": 0,
+    "variable_pay": "unspecified",
+    "notes": ""
+  }
 }

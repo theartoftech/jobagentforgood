@@ -12,6 +12,11 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
 
+try:
+    from scripts.career_context import validate_career_fields
+except ModuleNotFoundError:
+    from career_context import validate_career_fields
+
 OUTPUT_FILES = (
     "candidate_profile.yml", "candidate_workflow_profile.yml", "companies.yml",
     "ats_registry.yml", "startup_watchlist.yml", "manual_job_urls.yml", "job_overrides.yml",
@@ -68,6 +73,7 @@ def validate_answers(data: dict[str, Any]) -> None:
         ZoneInfo(data["timezone"])
     except ZoneInfoNotFoundError as exc:
         raise ValueError("timezone must be an IANA zone such as Europe/Berlin") from exc
+    validate_career_fields(data)
     companies = data.get("companies")
     if not isinstance(companies, list) or not 1 <= len(companies) <= 199:
         raise ValueError("Choose 1–199 companies; LinkedIn occupies one of the maximum 200 search sites")
@@ -124,6 +130,10 @@ def configure(data: dict[str, Any], root: Path) -> None:
                 "candidate_gap_resolutions": {skill: "do_not_claim" for skill in data["do_not_claim"]},
                 "gap_resolutions": {}, "seniority_approvals": {}, "strategic_companies": [],
                 "resume_templates": {}, "default_resume_template": "general", "resume_core_skills": data["strong_keywords"]}
+    career_fields = {key: data[key] for key in ("career_context", "compensation_preferences") if key in data}
+    profile.update(career_fields)
+    workflow.update(career_fields)
+    workflow["compensation_reviews"] = {}
     sources = [{"name": "LinkedIn Jobs", "url": "https://www.linkedin.com/jobs/", "type": "browser_assisted"}]
     sources += [{"name": c["name"], "url": c["careers_url"], "type": "official"} for c in data["companies"]]
     docs: dict[str, Any] = {
@@ -136,10 +146,13 @@ def configure(data: dict[str, Any], root: Path) -> None:
         "candidate_evidence.json": {key: data[key] for key in ("name", "email", "last_role", "evidence", "resume_path", "languages", "city", "metro", "employment_types", "work_authorization", "sponsorship_required", "travel", "relocation")},
         "resume_templates.json": {},
     }
+    docs["candidate_evidence.json"].update(career_fields)
     # JSON quoting is deliberately not used for a shell file: it permits command substitution.
     docs[".env.local"] = "# Optional document contact settings; no API credentials are required.\n"
     docs["search_rules.md"] = (
         "# Candidate search rules\n\nRead candidate_evidence.json, both profiles, and run_preferences.json before every run.\n"
+        "Adapt the interview and review to career_context: profession, level, responsibilities, transferable skills, tools and credentials. Empty tools lists are valid; never inject technology requirements.\n"
+        "Compare guaranteed base pay separately from commission/OTE using compensation_preferences. Record verified posting-specific compensation_reviews with status, evidence and reviewed_on.\n"
         "Only verified live employer/ATS postings can be recommended. Never invent qualifications or dates.\n"
         "Evaluate required versus preferred criteria, spoken/written languages, country restrictions, work authorization, sponsorship, compensation currency, employment type, travel and relocation against the interview answers.\n"
         "Unknown eligibility or required experience means ask the candidate; a discovery score is not approval.\n"
@@ -159,6 +172,10 @@ def check_setup(root: Path) -> int:
     for name in OUTPUT_FILES:
         if not (root / name).is_file():
             raise FileNotFoundError(f"Setup incomplete: {name}. Follow README.md.")
+    workflow = yaml.safe_load((root / "candidate_workflow_profile.yml").read_text(encoding="utf-8"))
+    if not isinstance(workflow, dict):
+        raise ValueError("candidate_workflow_profile.yml must contain a mapping")
+    validate_career_fields(workflow)
     sites: set[str] = set()
     for filename, key, url_key in (("companies.yml", "companies", "careers_url"),
                                   ("startup_watchlist.yml", "startups", "careers_url"),
