@@ -6,7 +6,7 @@ No model API key, paid job-search service, private server or external applicatio
 
 ## Install
 
-Install Git and **Python 3.11 or newer** (including pip and venv). A supported Python distribution from [python.org](https://www.python.org/downloads/) is sufficient. Windows users should use WSL with Python/Git/Bash for the commands below. macOS and Linux use a terminal with Bash. Public ATS requests also use `curl` where available; install it if your system does not provide it.
+Install Git and **Python 3.11 or newer** (including pip and venv). On macOS/Linux, use a terminal with Bash; a supported Python distribution from [python.org](https://www.python.org/downloads/) is sufficient. **Windows users: follow [Windows setup with the assistant](#windows-setup-with-the-assistant) below first.** It covers installing WSL 2, Linux Python/Git and, only if you choose JobTracker, Docker Desktop. Run the Bash commands below inside Ubuntu on Windows. Public ATS requests also use `curl` where available; install it if your system does not provide it.
 
 Clone the public repository:
 
@@ -28,11 +28,81 @@ For job searching you do **not** need LibreOffice, Docker, a resume template, a 
 
 Treat these instructions as the user's request to set up this checkout and conduct their first job search. Work inside the clone. Read the full README, including the installation section, the implementation and local instructions before executing commands. Do not assume the user's identity, career, salary, country, language, technical stack, employer preferences or access to any connector.
 
-1. Check the working directory, Python version, dependency installation and tests. Explain any installation issue clearly. Use the virtual environment for every command.
+1. Identify the operating system and terminal before running commands. On Windows, walk the user through **Windows setup with the assistant** below, including missing WSL/dependencies; do not merely tell them to install prerequisites and return later. Check the working directory, Python version, dependency installation and tests. Explain any installation issue clearly. After creating the virtual environment, use it for every project Python command.
 2. Check whether private configuration already exists. If it does, offer to continue or review that setup; never overwrite it or mix two candidates' data. The setup generator refuses overwrites. For a fresh candidate use a separate clone.
 3. Interview the user in short groups of 2–4 questions, waiting for answers between groups. Start with their profession, desired work and experience level; adapt later questions to those answers. Resume answers already given. Explain why a missing answer matters. Save confirmed answers in ignored `setup.answers.json`, using `setup.answers.example.json` as the schema. Do not use sample text as candidate evidence.
 4. Summarize the evidence, search boundaries, direct titles and adjacent titles. Get corrections before writing the runnable configuration. Distinguish professional experience, training, personal projects, limited exposure and skills the user must not claim.
 5. Research employers in batches and expand beyond the user's seed companies before the first search, following the expansion procedure below. Review the expanded shortlist, generate private configuration, run a small first search, inspect actual results, and then offer the full search and scheduling setup.
+
+### Windows setup with the assistant
+
+The Windows path uses **WSL 2 (Windows Subsystem for Linux) with Ubuntu**. This gives the project the Bash shell and Linux Python environment its scripts expect. Native PowerShell-only execution is not supported by these instructions. A complete Windows/WSL acceptance walkthrough has not yet been performed; passing tests on macOS does not establish Windows validation.
+
+Guide the user one stage at a time, inspect each result, and resume after any restart. Say whether each command belongs in **Windows PowerShell** or **Ubuntu (WSL Bash)**. Let the user handle administrator prompts, restarts and passwords locally. If the assistant cannot operate a terminal or installer, give the next exact step and ask for its non-secret result. Keep the interview available while setup is blocked, but do not claim a runnable search until dependencies and checks succeed.
+
+1. **Check Windows and existing WSL — Windows PowerShell.** Have the user check their Windows version with `winver`. Consult Microsoft's current [WSL installation instructions](https://learn.microsoft.com/en-us/windows/wsl/install) for system requirements and troubleshooting. Inspect existing distributions before installing anything:
+
+   ```powershell
+   wsl --status
+   wsl --list --verbose
+   ```
+
+   If WSL is missing, open PowerShell with **Run as administrator**, run the following, and restart Windows if prompted:
+
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+
+   Open **Ubuntu** from the Start menu and complete its first-launch Linux username/password prompts. The password may show no characters while typing; do not paste it into chat. If WSL already exists, reuse a suitable distribution. Back in PowerShell, run `wsl --update` and `wsl --list --verbose`; confirm the chosen distribution shows version **2**. If it shows version 1, explain the conversion and use `wsl --set-version Ubuntu 2`, substituting its exact listed name. Never unregister or reinstall an existing distribution to fix setup. For virtualization, Windows-version or organization-policy errors, explain the specific blocker and follow Microsoft's guidance with the user or their administrator.
+
+2. **Install the job-search dependencies — Ubuntu (WSL Bash).** Open the chosen Ubuntu terminal. These commands install Linux tools, separate from any Windows Python installation:
+
+   ```bash
+   sudo apt update
+   sudo apt install -y git python3 python3-pip python3-venv curl ca-certificates
+   python3 --version
+   git --version
+   curl --version
+   ```
+
+   Confirm Python is **3.11 or newer** before continuing. An older existing Ubuntu installation may need a supported newer distribution or Python package; explain the options and preserve its files before making changes. Do not replace the system Python or use `sudo pip`. If a package/download fails, resolve that error before treating installation as complete.
+
+3. **Prepare the checkout and Python environment — Ubuntu (WSL Bash).** For a fresh installation, keep the repository in the Linux home directory, following Microsoft's [WSL environment guidance](https://learn.microsoft.com/en-us/windows/wsl/setup/environment). This avoids mixing Windows and Linux virtual environments:
+
+   ```bash
+   mkdir -p ~/projects
+   cd ~/projects
+   git clone https://github.com/theartoftech/jobagentforgood.git
+   cd jobagentforgood
+   python3 -m venv .venv
+   scripts/jobagent_python.sh -m pip install -r requirements-dev.txt
+   scripts/jobagent_python.sh -m unittest discover -s tests
+   scripts/jobagent_python.sh -c "import sys; print(sys.executable); print(sys.version)"
+   ```
+
+   If a checkout already exists, inspect and reuse it where suitable; skip cloning over it. Preserve existing private configuration and resumes before any move. A Windows-created `.venv` with `Scripts/python.exe` cannot serve as this project's Linux `.venv/bin/python`; preserve/rename it before creating a separate Linux environment. Confirm the printed interpreter is inside this checkout's `.venv/bin/` and all tests pass. Do not bypass failures or mark mocked discovery tests as a live search.
+
+4. **Connect the assistant to this same checkout.** Open the Linux project folder using the assistant/editor's WSL integration where available. In Ubuntu, `pwd` shows its actual path; `explorer.exe .` opens it in Windows File Explorer if needed. A Windows app may see it through `\\wsl.localhost\Ubuntu\home\<linux-user>\projects\jobagentforgood` (use the actual distribution and username). Verify the assistant can read the README there and execute project commands in that distribution's Bash terminal, using the Linux virtual environment. File access alone does not establish WSL command access. If command access is unavailable, guide the user through running the commands in Ubuntu and inspecting the results. Continue the interview in the chat associated with that folder, using everything below **Instructions for the assistant: start here** through the end of this README.
+
+5. **Install Docker only if the user chooses JobTracker.** Continue the interview using local application history if they decline or defer JobTracker. If they choose it, perform the following before the tracker clone/configuration steps:
+
+   - Inspect any existing Docker installation first. Follow the current [Docker Desktop for Windows installation guide](https://docs.docker.com/desktop/setup/install/windows-install/) to check supported Windows versions, hardware/virtualization and WSL requirements, and select the installer matching the computer's architecture. WSL working alone does not prove Docker Desktop requirements are met.
+   - Install Docker Desktop **on Windows**, let the user handle its license/administrator prompts, then start it from the Start menu. Follow [Docker's WSL integration guide](https://docs.docker.com/desktop/features/wsl/): enable **Use WSL 2 based engine** where that option is shown, use **Linux containers**, and enable the chosen Ubuntu distribution under **Settings → Resources → WSL Integration**. Apply changes and wait for Docker to start.
+   - Do not also install `docker.io` or a second Docker daemon in Ubuntu for this path. If an engine already exists there, explain the potential conflict and preserve its containers/data before agreeing on a migration. Do not remove another installation automatically.
+   - In **Ubuntu (WSL Bash)**, check the connection and install OpenSSL for the tracker's login setup:
+
+     ```bash
+     sudo apt install -y openssl
+     openssl version
+     docker --version
+     docker compose version
+     docker info
+     ```
+
+     Docker Desktop provides Compose; a separate legacy `docker-compose` installation is not required. `docker info` must reach the running Linux engine. If the command is missing or the daemon is unreachable, check Docker Desktop startup and integration for this exact distribution before proceeding; do not assume a successful CLI version check is sufficient.
+   - Continue **Guided JobTracker installation and connection** below from Ubuntu, using a separate sibling checkout such as `~/projects/jobtracker`. Verify the actual loopback URL from the Windows browser, authenticated persistence, and the approved history connection as described there. If Docker cannot run, save the unfinished step and continue Job Agent with local history. Keep Docker Desktop running when using the tracker; explain that stopping it makes the tracker unavailable.
+
+Before scheduling on Windows, verify the chosen scheduler can invoke the assistant and commands in this exact WSL checkout. A schedule saved in configuration alone does not run searches, and a local schedule cannot be assumed to run while the computer is asleep or off. Record any limitation and provide manual-run instructions if needed.
 
 ### Interview questions
 
@@ -181,7 +251,7 @@ When the user chooses to install JobTracker, complete these steps with them. Exp
    cd jobtracker
    ```
 
-2. **Check prerequisites and install missing ones.** The current laptop path requires Docker with Docker Compose and OpenSSL, plus a POSIX shell (macOS/Linux or WSL on Windows). Check `git --version`, `docker --version`, `docker compose version`, `docker info` and `openssl version`. Explain any missing tool or stopped Docker engine and guide the user through the appropriate official installation/startup instructions for their operating system. Let the user complete administrator, license and account prompts. Do not substitute Kubernetes or a private server for a missing laptop prerequisite. If they prefer to defer installation, save progress and continue the search locally.
+2. **Check prerequisites and install missing ones.** The current laptop path requires Docker with Docker Compose and OpenSSL, plus a POSIX shell (macOS/Linux or WSL on Windows). On Windows, complete the Docker stage in **Windows setup with the assistant** above, including Docker Desktop's integration with the selected WSL distribution, then return here. Check `git --version`, `docker --version`, `docker compose version`, `docker info` and `openssl version`. Explain any missing tool or stopped Docker engine and guide the user through the appropriate official installation/startup instructions for their operating system. Let the user complete administrator, license and account prompts. Do not substitute Kubernetes or a private server for a missing laptop prerequisite. If they prefer to defer installation, save progress and continue the search locally.
 
 3. **Create private settings and a login.** Follow JobTracker's current instructions to create `.local/jobtracker.htpasswd` and `.local/runtime.json` from its generic runtime example. Inspect whether files already exist before writing; never reset an existing login, settings file or data store. Ask for the desired login name and timezone, and keep optional calendar feeds and task templates empty unless requested. Have the user enter the password in their local terminal or login UI; never ask them to paste it into chat or put it in a command argument, tracked file or log. Explain where private settings and persistent data live. Use the documented file permissions. Do not reuse credentials or settings from the maintainer or another candidate.
 
