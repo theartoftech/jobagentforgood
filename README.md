@@ -1,8 +1,39 @@
 # Job Agent
 
-An assistant-guided job search you configure for your own experience, location and goals. Clone this repository and open the project folder in Codex, Claude Code, Antigravity, or another coding assistant with local file and web access. **Copy everything below “Instructions for the assistant: start here” through the end of this README and paste it into a new chat associated with this project.** The assistant will guide you through setup, the interview and your first search.
+Job Agent helps you find jobs that fit your experience, location and goals. An AI assistant guides you through setup, asks about the work you want, and helps you review the results. It never submits applications for you.
 
-No model API key, paid job-search service, private server or external application tracker is required. Your assistant supplies the conversation, web research and browser access. The Python tools supply ATS discovery, search plans, deduplication, configurable screening and local reports. They never submit applications.
+## Start here — no coding experience needed
+
+You need an AI assistant that can work with files and run commands on your computer, with web access for research. Examples include Codex, Claude Code and Antigravity; available features depend on your installation. A chat that can only exchange messages cannot complete the setup on its own. You do not need a separate model API key or a job-tracking account.
+
+1. **Open your assistant.** If you do not have one installed, get help installing your chosen assistant first. Job Agent does not install the assistant itself.
+2. **Open a project chat.** If you already downloaded Job Agent, open that folder. Otherwise, create an empty folder called **Job Agent** in Documents, open it in your assistant, and start a chat there. The assistant will help download the project and, on Windows, choose the final working folder after setup.
+3. **Copy and send this message:**
+
+```text
+Help me set up Job Agent and run my first job search. I am not a technical user.
+
+If this folder contains Job Agent, read its README.md. Otherwise, read
+https://github.com/theartoftech/jobagentforgood/blob/main/README.md
+and help me download the project into a suitable folder without overwriting anything.
+Follow the section “Instructions for the assistant: start here”.
+
+First ask whether I use Windows, Mac or Linux, and check what is already installed.
+Do the setup work you can safely do yourself. When I need to do something,
+give me just one step, tell me exactly where to click or paste, and wait for my reply.
+Do not give me a full page of commands. Explain unfamiliar terms in plain language.
+Help me resume after a restart. Ask about optional JobTracker separately;
+I can start searching without it. Then interview me and show me my first results.
+```
+
+**You can stop reading here.** The rest is reference material for your assistant. You do not need to install Python, learn Git commands, or work through the Windows instructions by yourself before starting the chat.
+
+On Windows, the assistant may help install a Windows feature called **WSL** and an app called **Ubuntu**, which provide the environment Job Agent runs in. You may need to approve an installation and restart your computer. If you choose the optional JobTracker app, there is an additional Docker installation. You can leave that for later and track applications in Job Agent's local files instead.
+
+If your assistant cannot open the web link, open this README yourself and copy everything below **Instructions for the assistant: start here** through the end into that project chat. If it cannot access files or run commands, it should explain that limitation and guide you through the next step; it must not claim setup is complete.
+
+<details>
+<summary>Manual installation reference — for the assistant or users who prefer commands</summary>
 
 ## Install
 
@@ -22,11 +53,26 @@ If a Homebrew Python fails with a `pyexpat` / `Symbol not found` error, repair/u
 
 For job searching you do **not** need LibreOffice, Docker, a resume template, a LinkedIn export, or JobTracker. Optional Word-document production requires a verified DOCX source and LibreOffice plus Poppler (`pdftoppm`), or Docker with the renderer built from `docker/resume-renderer`. Document production has additional template requirements described below.
 
-**Start your setup chat:** After cloning and opening the project, copy all text below the following heading, starting with “Treat these instructions” and continuing to the end of this file. Paste it into a new chat with access to this project folder. You do not need to copy the introduction or installation section above; the assistant will read the README to check installation.
+</details>
+
+The assistant reads the instructions below. You can use the short message above, or paste everything below the following heading into a chat with access to the project folder.
 
 ## Instructions for the assistant: start here
 
-Treat these instructions as the user's request to set up this checkout and conduct their first job search. Work inside the clone. Read the full README, including the installation section, the implementation and local instructions before executing commands. Do not assume the user's identity, career, salary, country, language, technical stack, employer preferences or access to any connector.
+Treat these instructions as the user's request to set up Job Agent and conduct their first job search. Read the full README, including collapsed reference sections. If the project has not been downloaded, help obtain the public repository after checking the selected folder and required tools; never overwrite an existing checkout or candidate's files. On Windows, establish WSL and its final Linux project folder before cloning there. Once available, work inside the clone and read the implementation and local instructions before executing project commands. Do not assume the user's identity, career, salary, country, language, technical stack, employer preferences or access to any connector.
+
+### How to guide someone who is not technical
+
+Start with a short welcome and one question: **“Are you using Windows, Mac or Linux?”** Use an answer already supplied rather than asking again. Inspect the environment to verify the answer and identify what is already installed. Do not start by listing prerequisites, asking the user to clone a repository, or sending all the commands below.
+
+- **Do the routine work.** Use your available tools to check files, download the project, install project dependencies and run checks within the user's authorized setup. Confirm your actual access; do not assume a Windows app can execute commands inside Ubuntu. When user action is needed, give one action and wait for the result. Do not ask the user to repeat a check you can perform yourself.
+- **Make each instruction concrete.** Say which app to open, how to find it, what to click or paste, and what they should see. For example: “Click Start, type PowerShell, right-click Windows PowerShell, and choose Run as administrator. Tell me when the window opens.” Only then provide the single command needed. When switching to Ubuntu, explicitly say to open Ubuntu from Start; never expect the user to recognize a shell from its prompt.
+- **Explain only what matters now.** Describe WSL/Ubuntu as the environment Job Agent needs on Windows, Python as a program that runs the search tools, and Docker as a program needed for the optional tracker. Do not make the user choose distributions, interpreters, virtual environments, ports or database schemas without explaining a concrete need. Use the documented defaults when appropriate.
+- **Check before advancing.** Ask what happened or inspect the result yourself. If something fails, explain the error in plain language and give the next corrective step. A missing administrator permission or unavailable assistant tool is a setup blocker, not a reason to claim success. Users enter passwords locally; never request passwords or secrets in chat.
+- **Plan for restarts.** Before a restart, tell the user how to reopen the assistant and this chat, which steps are complete, and the exact next step. Ask them to return with “I'm back”; then recheck the environment. If a new project folder/chat is required, supply a short handoff with completed steps and the next action, without credentials or candidate answers. Do not make them start the interview over.
+- **Separate optional features.** Ask about JobTracker in plain language: “Would you like a separate app to track applications, or keep a simple history here? You can add the app later.” Explain the additional installation before proceeding. Do not install Docker during basic job-search setup unless the user chooses a feature that needs it. Keep document production and scheduling for their later workflow stages.
+
+The command blocks below are a reference for you, not a checklist to dump into chat. Success means the user reaches a verified working setup and real first-search results, not that you supplied installation instructions. The Windows flow still needs a real Windows/nontechnical-user walkthrough; do not call these wording changes proof of usability or Windows compatibility.
 
 1. Identify the operating system and terminal before running commands. On Windows, walk the user through **Windows setup with the assistant** below, including missing WSL/dependencies; do not merely tell them to install prerequisites and return later. Check the working directory, Python version, dependency installation and tests. Explain any installation issue clearly. After creating the virtual environment, use it for every project Python command.
 2. Check whether private configuration already exists. If it does, offer to continue or review that setup; never overwrite it or mix two candidates' data. The setup generator refuses overwrites. For a fresh candidate use a separate clone.
@@ -35,6 +81,9 @@ Treat these instructions as the user's request to set up this checkout and condu
 5. Research employers in batches and expand beyond the user's seed companies before the first search, following the expansion procedure below. Review the expanded shortlist, generate private configuration, run a small first search, inspect actual results, and then offer the full search and scheduling setup.
 
 ### Windows setup with the assistant
+
+<details>
+<summary>Windows technical reference — the assistant walks you through only the steps you need</summary>
 
 The Windows path uses **WSL 2 (Windows Subsystem for Linux) with Ubuntu**. This gives the project the Bash shell and Linux Python environment its scripts expect. Native PowerShell-only execution is not supported by these instructions. A complete Windows/WSL acceptance walkthrough has not yet been performed; passing tests on macOS does not establish Windows validation.
 
@@ -103,6 +152,8 @@ Guide the user one stage at a time, inspect each result, and resume after any re
    - Continue **Guided JobTracker installation and connection** below from Ubuntu, using a separate sibling checkout such as `~/projects/jobtracker`. Verify the actual loopback URL from the Windows browser, authenticated persistence, and the approved history connection as described there. If Docker cannot run, save the unfinished step and continue Job Agent with local history. Keep Docker Desktop running when using the tracker; explain that stopping it makes the tracker unavailable.
 
 Before scheduling on Windows, verify the chosen scheduler can invoke the assistant and commands in this exact WSL checkout. A schedule saved in configuration alone does not run searches, and a local schedule cannot be assumed to run while the computer is asleep or off. Record any limitation and provide manual-run instructions if needed.
+
+</details>
 
 ### Interview questions
 
