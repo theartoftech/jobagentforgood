@@ -44,6 +44,16 @@ the saved next step and continue local discovery. If recurring tracker reads wer
 approved, perform the recorded, tested read/export conversion before local history
 reconciliation. Otherwise report that external history was not refreshed. Never
 interpret installation or a stored endpoint as automatic sync or write consent.
+An optional tracker export or refresh failure must not end the whole run. Continue
+independent discovery and review using valid local history, and label external
+history as unchecked or not refreshed. If local history is missing or invalid,
+report that reconciliation is blocked, preserve existing records, and complete
+independent discovery; never create empty history to bypass the error. Finish the
+available report with source/history limitations and the specific next action.
+In an interactive setup chat, resume the next unanswered interview questions or
+authorized onboarding stage instead of ending with an offer to continue. Follow
+README.md's onboarding completion criteria; a scheduled run must not claim user
+acceptance or reactivate an incomplete integration without permission.
 Open LinkedIn Jobs in the internal browser for additional hits if available;
 otherwise report that gap and provide search links. Resolve all discoveries to
 live official employer/ATS pages. Inspect complete required qualifications, salary
