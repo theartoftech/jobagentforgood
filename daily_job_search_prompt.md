@@ -54,6 +54,14 @@ In an interactive setup chat, resume the next unanswered interview questions or
 authorized onboarding stage instead of ending with an offer to continue. Follow
 README.md's onboarding completion criteria; a scheduled run must not claim user
 acceptance or reactivate an incomplete integration without permission.
+When user input is needed in an interactive chat, use the supported interactive
+question tool for the current mode and purpose, including result feedback and
+schedule choices. If unavailable or failing, ask directly in chat. Present the
+specific question before stopping; a status summary is not a request for input.
+Preserve unanswered questions and wait before dependent work; never infer consent
+from a suggested option or timeout. In unattended runs, record and notify the user
+of required questions through the supported channel, then finish independent work
+without starting a blocking interview or repeatedly notifying unchanged questions.
 Open LinkedIn Jobs in the internal browser for additional hits if available;
 otherwise report that gap and provide search links. Resolve all discoveries to
 live official employer/ATS pages. Inspect complete required qualifications, salary
@@ -71,5 +79,9 @@ failures. Keep unavailable sources distinct from zero matches. Preserve prior
 outputs and exact-posting decisions. Never submit applications, send messages,
 publish analytics or create documents without the relevant user authorization.
 Only the strict dated resume-ready queue can authorize optional documents.
+If optional documents are authorized, consult resume_sources in candidate_evidence.json
+and select the candidate-confirmed version suited to the role; multiple versions
+may be current. Ask if the choice is ambiguous and identify the selected source.
+Preserve originals and complete the README's separate DOCX template validation.
 Stay quiet when results are unchanged and non-actionable; notify for meaningful
 changes, failures or required user action.
