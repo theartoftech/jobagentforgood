@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Produce validated cover letters for an explicitly authorized Resume Ready queue.
 
-This command is intentionally separate from the scheduled daily workflow.  It
+This command is used at the end of an approved document-enabled search. It
 only accepts the strict reviewer’s exact, dated Resume Ready queue and never
 widens that queue or creates cover letters for diagnostic, applied, or
 unreviewed postings.

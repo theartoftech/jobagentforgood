@@ -367,7 +367,15 @@ def write_search_plan(
              "```bash",
              f"scripts/jobagent_python.sh scripts/review_job_fit.py --discovered-jobs {out_dir}/{today}-discovered-jobs.json --workflow-profile candidate_workflow_profile.yml --applied-jobs {out_dir}/{today}-applied-jobs.json --out {out_dir} --date {today}",
              "```", "",
-             "Open workflow-review.html and human-review-packets.md. The dated resume-ready-jobs.md is the only document authorization queue. Documents and analytics are optional; see README.md.",
+             "Open workflow-review.html and human-review-packets.md. The dated resume-ready-jobs.md is the only document authorization queue.",
+             "", "## Finish every run: reports and application documents", "",
+             "End every run with reports, including zero matches, source failures and unresolved questions. Follow README.md's end-of-run delivery procedure.",
+             "When document_generation is enabled with the candidate's standing approval and validated templates, execute the following command after strict review for a nonempty eligible queue. It creates both resumes and cover letters and refreshes the HTML report. This plan alone is not approval.",
+             "```bash",
+             f"scripts/jobagent_python.sh scripts/produce_resumes.py --resume-ready {out_dir}/{today}-resume-ready-jobs.md --applied-jobs {out_dir}/{today}-applied-jobs.json --source-dir 'Source Docs' --template-config resume_templates.json --out {out_dir}/resumes",
+             "```", "",
+             "For an empty queue, report no eligible documents without calling the producer. Missing approval, evidence, templates, valid history or a working renderer must be reported as blocked or explicitly declined/deferred, never silently skipped. Continue delivering available reports on document failure.",
+             "Inspect both production manifests, actual DOCX files and rendered pages; link verified artifacts in the final report. Reuse only still-current validated documents for the exact posting. Never submit an application or publish analytics as part of this step.",
              "## Candidate rules", "", rules_text, "", "## Company searches", ""]
     for company in companies[:MAX_DETAILED_COMPANY_SECTIONS_IN_PLAN]:
         lines.append(f"### {company['name']}")

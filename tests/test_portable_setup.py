@@ -129,6 +129,27 @@ class PortableRequirementTests(unittest.TestCase):
             for forbidden in ("--ssh-host", "publish_skill_gap_analytics.py", "USAJOBS", "Bonsai", "jhaynes"):
                 self.assertNotIn(forbidden, plan)
 
+    def test_plan_finishes_with_reports_and_gated_document_production(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp)
+            path = search_jobs.write_search_plan(
+                today="2026-10-29", companies=[], profile={},
+                rules_text="Only confirmed evidence", out_dir=out_dir,
+            )
+            plan = path.read_text()
+            command = "scripts/jobagent_python.sh scripts/produce_resumes.py"
+            self.assertGreater(plan.index(command), plan.index("scripts/review_job_fit.py"))
+            for expected in (
+                "document_generation", "standing approval", "validated templates",
+                f"--resume-ready {out_dir}/2026-10-29-resume-ready-jobs.md",
+                f"--applied-jobs {out_dir}/2026-10-29-applied-jobs.json",
+                f"--out {out_dir}/resumes", "--template-config resume_templates.json",
+                "both resumes and cover letters", "empty queue", "blocked",
+                "End every run with reports", "README.md",
+            ):
+                self.assertIn(expected, plan)
+            self.assertNotIn("Documents and analytics are optional", plan)
+
 class SetupBoundaryTests(unittest.TestCase):
     def test_optional_startups_and_disabled_rotation(self) -> None:
         from scripts import discover_jobs_sharded as sharded

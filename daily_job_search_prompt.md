@@ -3,6 +3,21 @@ search_rules.md, candidate_evidence.json and both candidate profiles first. Use
 only this candidate's confirmed profession, titles, capabilities, languages, metro, countries and
 work preferences. Keep the total site list at or below 200.
 
+This prompt is the work performed by an existing heartbeat or a manual run; it
+does not register a schedule. During interactive onboarding, finish README.md's
+"Finish setup: create and verify the heartbeat" procedure after result acceptance
+and scheduling approval. First complete its required cadence/output interview
+checkpoint; ask missing questions interactively instead of treating configuration
+defaults as candidate answers. Read saved interview_preferences for confirmed
+runtime/site limits and report format, preserving explicit deferrals. Previously
+confirmed preferences remain valid even if saved outside this object; ask only
+for genuinely missing answers. In a manual
+chat, confirm concrete limits for that run if unresolved. In an unattended run,
+report unresolved required execution limits without starting an unbounded scan
+or inferring consent. During a scheduled run, do not create another heartbeat,
+change its cadence or reactivate a paused task. Report scheduler/configuration
+mismatches as questions without treating saved preferences as proof of activation.
+
 Read career_context before choosing questions, search terms or adjacent roles.
 Use profession-relevant responsibilities, results, credentials and transferable
 skills. Empty tools lists are valid. Never inject programming/cloud requirements
@@ -74,14 +89,40 @@ Check required licenses and credentials by jurisdiction; preferred qualification
 alone are not blockers.
 Ask about missing experience; never invent it or import another candidate's rules.
 
+Finish every run with README.md's "End-of-run delivery: reports, resumes and cover
+letters" procedure. Create the dated Markdown/HTML reports even when there are no
+matches or a later document stage fails; deliver the preferred report format.
 Report new actionable verified roles, gaps/questions, applied matches and source
 failures. Keep unavailable sources distinct from zero matches. Preserve prior
-outputs and exact-posting decisions. Never submit applications, send messages,
-publish analytics or create documents without the relevant user authorization.
-Only the strict dated resume-ready queue can authorize optional documents.
-If optional documents are authorized, consult resume_sources in candidate_evidence.json
-and select the candidate-confirmed version suited to the role; multiple versions
-may be current. Ask if the choice is ambiguous and identify the selected source.
-Preserve originals and complete the README's separate DOCX template validation.
+outputs and exact-posting decisions. Reserve time within the approved run budget
+for document production and verification; report any unfinished artifacts.
+
+Read the candidate's standing document approval and run_preferences.json's
+document_generation flag. When enabled and validated, produce the appropriate
+resume and cover letter for each current strictly qualified, unapplied posting.
+Do not ask again for recurring approval already given or stop with an offer to
+make documents later. Only the current strict dated resume-ready queue, matching
+review and reconciled application snapshot permit production. An empty queue
+needs no documents; invalid/missing history or review is blocked, not empty.
+Consult resume_sources in candidate_evidence.json and select the confirmed
+validated template suited to the role; multiple versions may be current. Ask
+about ambiguity interactively, or record it as pending in an unattended run.
+Preserve originals. Never invent experience or use placeholder contact details.
+
+For approval covering both document types, execute the dated plan's
+produce_resumes.py command after strict review. That CLI
+produces both resumes and cover letters and refreshes the HTML report. Inspect
+both production manifests, actual DOCX files and rendered pages; verify truthful
+role-specific content and links before reporting success. Honor a narrower saved
+document choice with the corresponding producer instead of the combined CLI.
+Reuse documents only
+for the exact posting with still-current evidence, template and tailoring.
+Report generated/reused files per posting and any blocked or pending artifacts.
+If documents were declined/deferred, preserve that choice; if setup is incomplete
+or generation fails, report the exact blocker and continue available reports.
+Save a dated delivery summary with report and verified document links on every
+run. Report delivery separately from document success. Never submit applications,
+send messages, publish analytics or upload documents to a tracker without the
+separate relevant authorization.
 Stay quiet when results are unchanged and non-actionable; notify for meaningful
 changes, failures or required user action.
