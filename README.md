@@ -11,7 +11,7 @@ You need an AI assistant that can work with files and run commands on your compu
 3. **Copy and send this message:**
 
 ```text
-Help me set up Job Agent and run my first job search. I am not a technical user.
+Help me set up Job Agent and run my first job search.
 
 If this folder contains Job Agent, read its README.md. Otherwise, read
 https://github.com/theartoftech/jobagentforgood/blob/main/README.md
