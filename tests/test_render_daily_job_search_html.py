@@ -120,6 +120,43 @@ class HumanSearchChecklistTests(unittest.TestCase):
 
 
 class RenderDailyJobSearchHtmlTests(unittest.TestCase):
+    def test_empty_bucket_placeholders_do_not_create_jobs_or_detail_pages(self) -> None:
+        for message in ("No jobs in this bucket", "No roles in this bucket"):
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as directory:
+                report = SAMPLE_REPORT.replace(
+                    "| 1 | Example Co | Senior Engineer | 2026-06-22 | Remote / Remote | 88 | https://example.com/jobs/1 | No |",
+                    f"| - | - | {message} | - | - | - | - | - |",
+                ).replace(
+                    "| 1 | Another Co | Staff Engineer | 2026-06-20 | Atlanta / Hybrid | 71 | https://example.com/jobs/2 | Yes (2026-06-21) |",
+                    f"| - | - | {message} | - | - | - | - | - |",
+                )
+                root = Path(directory)
+                report_path = root / "2026-06-23-daily-job-search.md"
+                networking_path, output_path = build_default_paths(report_path)
+                report_path.write_text(report)
+                networking_path.write_text("# Networking\n\nNot performed.\n")
+                self.assertEqual([], parse_report_rows(report))
+                created = write_html_report(report_path=report_path)
+                self.assertTrue(created.is_file())
+                self.assertEqual([], list(build_detail_directory(output_path).glob("*.html")))
+                rendered = created.read_text()
+                self.assertNotIn('href="-"', rendered)
+                self.assertIn('href="2026-06-23-workflow-review.html"', rendered)
+
+    def test_empty_bucket_placeholder_preserves_actual_jobs(self) -> None:
+        report = SAMPLE_REPORT.replace(
+            "| 1 | Example Co | Senior Engineer | 2026-06-22 | Remote / Remote | 88 | https://example.com/jobs/1 | No |",
+            "| - | - | No jobs in this bucket | - | - | - | - | - |",
+        )
+        rows = parse_report_rows(report)
+        self.assertEqual(["https://example.com/jobs/2"], [row.url for row in rows])
+
+    def test_empty_bucket_words_in_a_real_job_title_are_preserved(self) -> None:
+        report = SAMPLE_REPORT.replace("Senior Engineer", "No jobs in this bucket", 1)
+        rows = parse_report_rows(report)
+        self.assertEqual(2, len(rows))
+        self.assertEqual("https://example.com/jobs/1", rows[0].url)
+
     def test_remove_networking_appendix_strips_marker_block(self) -> None:
         cleaned = remove_networking_appendix(SAMPLE_REPORT)
 

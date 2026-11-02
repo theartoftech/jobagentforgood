@@ -308,6 +308,15 @@ def extract_table_rows(lines: list[str], start_index: int) -> tuple[list[list[st
     return rows, index
 
 
+def is_empty_bucket_row(row: list[str]) -> bool:
+    return (
+        len(row) == 8
+        and row[1] in {"", "-"}
+        and row[6] in {"", "-"}
+        and row[2].casefold() in {"no jobs in this bucket", "no roles in this bucket"}
+    )
+
+
 def parse_report_rows(report_markdown: str) -> list[ReportRow]:
     lines = remove_networking_appendix(report_markdown).splitlines()
     rows: list[ReportRow] = []
@@ -327,6 +336,8 @@ def parse_report_rows(report_markdown: str) -> list[ReportRow]:
             for raw_row in raw_rows:
                 if len(raw_row) != 8:
                     raise ValueError(f"Expected 8 columns in {current_section} table, found {len(raw_row)}.")
+                if is_empty_bucket_row(raw_row):
+                    continue
                 rows.append(
                     ReportRow(
                         decision=DECISION_SECTION_MAP[current_section],
@@ -548,6 +559,8 @@ def insert_detail_links(report_markdown: str, detail_links: dict[tuple[str, str,
             output.append("| Priority | Company | Role | Posted | Location / Work Model | Fit | URL | Already Applied |")
             output.append("|---|---|---|---|---|---|---|---|")
             for raw_row in raw_rows:
+                if is_empty_bucket_row(raw_row):
+                    continue
                 canonical_decision = DECISION_SECTION_MAP[current_section]
                 key = (canonical_decision, raw_row[0], raw_row[1], raw_row[2])
                 if key not in detail_links:

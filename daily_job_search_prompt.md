@@ -92,6 +92,20 @@ Ask about missing experience; never invent it or import another candidate's rule
 Finish every run with README.md's "End-of-run delivery: reports, resumes and cover
 letters" procedure. Create the dated Markdown/HTML reports even when there are no
 matches or a later document stage fails; deliver the preferred report format.
+The bundle must include both YYYY-MM-DD-daily-job-search.html (broad discovery)
+and YYYY-MM-DD-workflow-review.html (strict review), with their Markdown/JSON
+evidence. Populate the daily Markdown from actual saved discovery and official
+verification; an empty plan template or a narrative summary is not a replacement.
+Use the dated plan's render_daily_job_search_html.py and
+render_workflow_review_html.py commands. For networking that was not requested,
+supply a truthful not-performed note as the renderer's networking input without
+reading contact exports or sending messages. Keep exact-posting candidate
+questions and employer holds in the workflow JSON before rendering. Empty
+buckets contain no candidate rows. Verify counts, both companion links and local
+artifact links. Include direct links to both reports in results replies, update
+outputs/latest-report.html and outputs/report-index.md, and save the paths in the
+private progress record. Always save the bundle for zero matches, unchanged
+results, partial coverage and failures; silence controls notification only.
 Report new actionable verified roles, gaps/questions, applied matches and source
 failures. Keep unavailable sources distinct from zero matches. Preserve prior
 outputs and exact-posting decisions. Reserve time within the approved run budget

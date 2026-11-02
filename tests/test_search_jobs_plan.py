@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import importlib.util
+import io
+import json
+import shlex
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from scripts import render_daily_job_search_html, render_workflow_review_html
 
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "search_jobs.py"
@@ -18,6 +24,66 @@ SPEC.loader.exec_module(search_jobs)
 
 
 class SearchJobsPlanTests(unittest.TestCase):
+    def test_plan_report_commands_render_zero_match_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            date = "2026-06-23"
+            companies = [{"name": "Example Co", "careers_url": "https://example.com/careers"}]
+            plan = search_jobs.write_search_plan(
+                today=date, companies=companies, profile={}, rules_text="", out_dir=root,
+            ).read_text()
+            search_jobs.write_report_template(today=date, out_dir=root, human_search_companies=companies)
+            (root / f"{date}-networking-matches.md").write_text("# Networking\n\nNot performed.\n")
+            (root / f"{date}-workflow-review.json").write_text(json.dumps({
+                "generated_on": date, "reviews": [],
+            }))
+            renderers = {
+                "scripts/render_daily_job_search_html.py": render_daily_job_search_html.main,
+                "scripts/render_workflow_review_html.py": render_workflow_review_html.main,
+            }
+            rendered: list[str] = []
+            for line in plan.splitlines():
+                if not line.startswith("scripts/jobagent_python.sh scripts/render_"):
+                    continue
+                arguments = shlex.split(line)[1:]
+                with patch.object(sys, "argv", arguments), patch("sys.stdout", new_callable=io.StringIO):
+                    renderers[arguments[0]]()
+                rendered.append(arguments[0])
+            self.assertEqual(set(renderers), set(rendered))
+            broad = root / f"{date}-daily-job-search.html"
+            workflow = root / f"{date}-workflow-review.html"
+            self.assertIn(f'href="{workflow.name}"', broad.read_text())
+            self.assertIn(f'href="{broad.name}"', workflow.read_text())
+            self.assertEqual([], list(render_daily_job_search_html.build_detail_directory(broad).glob("*.html")))
+
+    def test_plan_delivers_both_dated_reports_before_optional_documents(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            out_dir = Path(directory)
+            plan = search_jobs.write_search_plan(
+                today="2026-06-23", companies=[], profile={}, rules_text="",
+                out_dir=out_dir,
+            ).read_text()
+
+        broad = (
+            "scripts/jobagent_python.sh scripts/render_daily_job_search_html.py "
+            f"--report {out_dir}/2026-06-23-daily-job-search.md "
+            f"--networking {out_dir}/2026-06-23-networking-matches.md"
+        )
+        workflow = (
+            "scripts/jobagent_python.sh scripts/render_workflow_review_html.py "
+            f"--workflow-review {out_dir}/2026-06-23-workflow-review.json"
+        )
+        for command in (broad, workflow):
+            self.assertIn(command, plan)
+            self.assertLess(plan.index("scripts/review_job_fit.py"), plan.index(command))
+            self.assertLess(plan.index(command), plan.index("scripts/produce_resumes.py"))
+        for required in (
+            "Populate", "not a completed report", "not-performed",
+            "both HTML reports", "outputs/latest-report.html", "outputs/report-index.md",
+            "zero matches", "partial", "JSON evidence",
+        ):
+            self.assertIn(required, plan)
+
     def test_plan_requires_employer_maintenance_before_discovery(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = search_jobs.write_search_plan(
