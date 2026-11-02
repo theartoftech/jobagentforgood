@@ -138,5 +138,21 @@ Save a dated delivery summary with report and verified document links on every
 run. Report delivery separately from document success. Never submit applications,
 send messages, publish analytics or upload documents to a tracker without the
 separate relevant authorization.
-Stay quiet when results are unchanged and non-actionable; notify for meaningful
-changes, failures or required user action.
+Send a brief daily coverage summary even when results are unchanged or there are
+no matches; this overrides the general silence rule for that daily summary.
+Show "Job sites scanned: N unique sites with completed listing checks out of M
+configured sites". Separately report attempted, failed, partial/manual-only and
+unattempted coverage and the configured employer count. Count actual job-listing
+checks from saved source evidence, deduplicate retries and equivalent board URLs,
+and exclude individual job pages and web-search queries. Unknown counts must be
+labeled unverified; never substitute the number of employers or configured sites.
+Ask "Would you like me to research more job sites for the next search?" using the
+supported interactive question tool, with Expand coverage / Keep current coverage,
+or ask directly in chat if unavailable. On unattended runs do not wait for a reply;
+save the pending question and complete independent work within existing approval.
+A default option or silence is not consent. Keep other search criteria and the
+200-site ceiling unchanged; at the ceiling, explain source review/replacement.
+Avoid duplicate question forms on same-day retries, while keeping the pending
+expansion question visible in each summary. Preserve future explicit opt-outs.
+Suppress repeated unchanged role details, qualification questions and source
+warnings; meaningful changes, failures and required user actions still warrant notice.

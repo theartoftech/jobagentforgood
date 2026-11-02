@@ -24,6 +24,23 @@ SPEC.loader.exec_module(search_jobs)
 
 
 class SearchJobsPlanTests(unittest.TestCase):
+    def test_plan_requires_daily_site_count_and_expansion_question(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            plan = search_jobs.write_search_plan(
+                today="2026-06-23", companies=[], profile={}, rules_text="",
+                out_dir=Path(directory),
+            ).read_text()
+        for required in (
+            "Job sites scanned", "unique sites", "configured sites",
+            "failed", "partial", "unverified", "employer count",
+            "Would you like me to research more job sites for the next search?",
+            "Expand coverage", "Keep current coverage", "interactive question",
+            "even when results are unchanged", "do not wait",
+            "Do not infer consent", "200-site ceiling",
+        ):
+            self.assertIn(required, plan)
+        self.assertNotIn("unchanged run needs no notification", plan)
+
     def test_plan_report_commands_render_zero_match_bundle(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
