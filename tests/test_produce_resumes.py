@@ -124,6 +124,31 @@ def write_empty_applied_snapshot(root: Path) -> Path:
 
 
 class ProduceResumesTests(unittest.TestCase):
+    def test_reviewer_candidate_evidence_queue_is_accepted_by_document_producer(self) -> None:
+        from scripts.review_job_fit import classify_review, write_resume_ready
+
+        review = classify_review(
+            job={
+                "company": "Example Co", "title": "Principal Software Engineer",
+                "url": "https://example.com/jobs/123456", "fit_score": 90,
+                "decision": "Apply", "description": "Requirements: Java engineering experience.",
+                "verification_status": "official_live", "work_model": "Remote",
+                "location": "Remote, United States",
+            },
+            workflow_profile={
+                "confirmed_strengths": ["Java"], "resume_core_skills": ["Java"],
+                "default_resume_template": "engineering",
+            },
+            tracker_jobs=[],
+        )
+        self.assertTrue(review.should_generate_resume)
+        with tempfile.TemporaryDirectory() as temporary:
+            ready = write_resume_ready([review], Path(temporary), "2026-11-02")
+            self.assertEqual(parse_resume_ready_jobs(ready)[0].resume_positioning, "candidate_evidence")
+            ready.write_text(ready.read_text().replace("candidate_evidence", "unsupported-positioning"))
+            with self.assertRaisesRegex(ValueError, "invalid resume positioning"):
+                parse_resume_ready_jobs(ready)
+
     def setUp(self) -> None:
         contact_environment = patch.dict(
             os.environ,
@@ -147,7 +172,7 @@ class ProduceResumesTests(unittest.TestCase):
             self.assertEqual(
                 (("Email", "mailto:engineer@example.org"),
                  ("LinkedIn", "https://www.linkedin.com/in/example-engineer"),
-                 ("AI Portfolio", "https://work.example.org")),
+                 ("Portfolio", "https://work.example.org")),
                 configured_contact_links(),
             )
 
@@ -254,7 +279,7 @@ class ProduceResumesTests(unittest.TestCase):
                         ".//{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t"
                     )
                 )
-                == "Email • LinkedIn • AI Portfolio"
+                == "Email • LinkedIn • Portfolio"
             )
             relationship_targets = {
                 relationship.attrib["Id"]: relationship.attrib["Target"]
@@ -299,7 +324,7 @@ class ProduceResumesTests(unittest.TestCase):
             {
                 "Email": "mailto:candidate@example.com",
                 "LinkedIn": "https://www.linkedin.com/in/candidate-profile",
-                "AI Portfolio": "https://portfolio.example.com",
+                "Portfolio": "https://portfolio.example.com",
             },
             contact_targets,
         )

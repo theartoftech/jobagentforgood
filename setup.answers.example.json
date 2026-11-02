@@ -26,7 +26,7 @@
   "excluded_titles": [],
   "exclude_if_primary_focus": [],
   "salary_floor": 0,
-  "freshness_days": 30,
+  "freshness_days": null,
   "sponsorship_required": false,
   "schedule_enabled": false,
   "document_generation": false,

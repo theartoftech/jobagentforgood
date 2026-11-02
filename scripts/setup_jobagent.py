@@ -129,6 +129,7 @@ def configure(data: dict[str, Any], root: Path) -> None:
                 "excluded_role_title_markers": data["excluded_titles"], "hard_reject_if_primary": data["exclude_if_primary_focus"],
                 "candidate_gap_resolutions": {skill: "do_not_claim" for skill in data["do_not_claim"]},
                 "gap_resolutions": {}, "seniority_approvals": {}, "strategic_companies": [],
+                "freshness": {"include_max_age_days": data["freshness_days"]},
                 "resume_templates": {}, "default_resume_template": "general", "resume_core_skills": data["strong_keywords"]}
     career_fields = {key: data[key] for key in ("career_context", "compensation_preferences") if key in data}
     profile.update(career_fields)

@@ -860,6 +860,15 @@ def classify_review(
         as_of=as_of,
     )
     blockers.extend(f'unconfirmed required specialist capability: {gap}' for gap in capability_gaps if gap in effective_required_gaps)
+    maximum_age = workflow_profile.get("freshness", {}).get("include_max_age_days")
+    if maximum_age is not None:
+        if type(maximum_age) is not int or not 1 <= maximum_age <= 365:
+            raise ValueError("Confirmed posting age must be an integer between 1 and 365")
+        age = job.get("posted_age_days")
+        if type(age) is not int or age < 0 or str(job.get("date_basis", "")).startswith("updated_at"):
+            blockers.append("original publication date requires freshness verification")
+        elif age > maximum_age:
+            blockers.append(f"original publication is older than the candidate's {maximum_age}-day maximum")
     overqualified_risk, resume_positioning, seniority_scope_risks, interview_positioning_note = (
         classify_seniority_fit(job=job, text=text, workflow_profile=workflow_profile)
     )

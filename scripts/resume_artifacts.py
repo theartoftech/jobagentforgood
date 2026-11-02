@@ -25,6 +25,7 @@ AUTHORIZED_DECISIONS = {"STRONG APPLY", "APPLY", "MODERATE STRETCH"}
 LEGACY_AUTHORIZED_DECISIONS = {"STRONG APPLY", "APPLY"}
 AUTHORIZED_OVERQUALIFIED_RISKS = {"low", "medium", "high"}
 AUTHORIZED_RESUME_POSITIONING = {
+    "candidate_evidence",
     "principal_architect_forward",
     "director_technical_leadership",
     "senior_lead_execution_forward",

@@ -36,6 +36,24 @@ def answers() -> dict[str, Any]:
 
 
 class PortableSetupTests(unittest.TestCase):
+    def test_posting_age_is_unanswered_in_example_and_asked_in_interview(self) -> None:
+        example = json.loads((ROOT / "setup.answers.example.json").read_text())
+        self.assertIsNone(example["freshness_days"])
+        readme = (ROOT / "README.md").read_text()
+        self.assertIn("How old can a job posting be", readme)
+
+    def test_each_candidates_confirmed_age_limit_is_saved_consistently(self) -> None:
+        for maximum in [7, 120]:
+            with self.subTest(maximum=maximum), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                setup_jobagent.configure({**answers(), "freshness_days": maximum}, root)
+                profile = discover_jobs.load_yaml(root / "candidate_profile.yml")["target_profile"]
+                workflow = discover_jobs.load_yaml(root / "candidate_workflow_profile.yml")
+                preferences = json.loads((root / "run_preferences.json").read_text())
+                self.assertEqual(profile["freshness"]["include_max_age_days"], maximum)
+                self.assertEqual(workflow["freshness"]["include_max_age_days"], maximum)
+                self.assertEqual(preferences["freshness_days"], maximum)
+
     def test_generates_all_private_inputs_without_inherited_preferences(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -236,7 +254,7 @@ class FirstRunIntegrationTests(unittest.TestCase):
         data["companies"][0]["careers_url"] = "https://boards.greenhouse.io/exampleclinic"
         today = dt.date.today().isoformat()
         ats_payload = {"jobs": [{"id": 123, "title": "Registered Nurse", "location": {"name": "Berlin, Germany"},
-                                "updated_at": today, "absolute_url": "https://boards.greenhouse.io/exampleclinic/jobs/123",
+                                "first_published": today, "updated_at": today, "absolute_url": "https://boards.greenhouse.io/exampleclinic/jobs/123",
                                 "content": "Onsite patient care and triage. Fluent German required."}]}
         with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
             root = Path(tmp)

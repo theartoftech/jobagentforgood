@@ -1433,8 +1433,11 @@ class GreenhouseAdapter(Adapter):
                 continue
             title = str(item.get("title", "")).strip()
             location = str((item.get("location") or {}).get("name", "")).strip()
-            updated_at = str(item.get("updated_at", ""))
-            posted_on, age, date_basis = parse_posted_age(updated_at, today)
+            published_at = str(item.get("first_published") or "")
+            posted_on, age, date_basis = parse_posted_age(published_at, today)
+            original_date_known = bool(posted_on) and age is not None and age >= 0
+            if not original_date_known:
+                posted_on, age = "", None
             job = JobPosting(
                 company=company["name"],
                 title=title,
@@ -1443,12 +1446,17 @@ class GreenhouseAdapter(Adapter):
                 work_model=infer_work_model(location, str(item.get("content", ""))),
                 posted_on=posted_on,
                 posted_age_days=age,
-                date_basis=f"updated_at: {date_basis}" if date_basis else "updated_at",
+                date_basis=f"first_published: {date_basis}" if original_date_known else "first_published unavailable",
                 description=html_to_text(str(item.get("content", ""))),
                 source=self.name,
                 job_id=str(item.get("id", "")),
             )
             score_job(job, profile, max_age_days, company=company, as_of=today)
+            if not original_date_known:
+                job.risk_flags.append("original publication date unavailable; needs freshness verification")
+                job.fit_reasons = [reason for reason in job.fit_reasons if "treated as freshest bucket" not in reason]
+                if job.decision != "Skip":
+                    job.decision = NEEDS_FRESHNESS_VERIFICATION_DECISION
             jobs.append(job)
         return jobs
 

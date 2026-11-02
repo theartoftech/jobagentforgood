@@ -81,7 +81,7 @@ HYPERLINK_REL_TYPE = f"{R_NS}/hyperlink"
 CONTACT_LINKS: tuple[tuple[str, str], ...] = (
     ("Email", "mailto:candidate@example.com"),
     ("LinkedIn", "https://www.linkedin.com/in/candidate-profile"),
-    ("AI Portfolio", "https://portfolio.example.com"),
+    ("Portfolio", "https://portfolio.example.com"),
 )
 REQUIRED_DOCX_PARTS = {
     "[Content_Types].xml",
@@ -116,7 +116,7 @@ def configured_contact_links() -> tuple[tuple[str, str], ...]:
             "JOBAGENT_RESUME_LINKEDIN_URL",
             os.environ.get("JOBAGENT_LINKEDIN_URL", CONTACT_LINKS[1][1]),
         ).strip()),
-        ("AI Portfolio", os.environ.get(
+        ("Portfolio", os.environ.get(
             "JOBAGENT_RESUME_PORTFOLIO_URL",
             os.environ.get("JOBAGENT_PORTFOLIO_URL", CONTACT_LINKS[2][1]),
         ).strip()),
@@ -432,7 +432,7 @@ def validate_docx(*, source_path: Path, resume_path: Path, expected_title: str) 
             (
                 paragraph
                 for paragraph in compatibility_root.findall(".//w:p", NS)
-                if paragraph_text(paragraph) == "Email • LinkedIn • AI Portfolio"
+                if paragraph_text(paragraph) == "Email • LinkedIn • Portfolio"
             ),
             None,
         )

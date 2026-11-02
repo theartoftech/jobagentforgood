@@ -179,7 +179,7 @@ class ProfessionAwareTests(unittest.TestCase):
         data["companies"][0]["careers_url"] = "https://boards.greenhouse.io/syntheticemployer"
         today = dt.date.today().isoformat()
         payload = {"jobs": [{"id": 1, "title": "Account Executive", "location": {"name": "Berlin, Germany"},
-            "updated_at": today, "absolute_url": "https://boards.greenhouse.io/syntheticemployer/jobs/1",
+            "first_published": today, "updated_at": today, "absolute_url": "https://boards.greenhouse.io/syntheticemployer/jobs/1",
             "content": "Requirements: negotiation and account growth. Onsite."}]}
         with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()):
             root = Path(tmp)

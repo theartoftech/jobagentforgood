@@ -9,7 +9,12 @@ does not register a schedule. During interactive onboarding, finish README.md's
 and scheduling approval. First complete its required cadence/output interview
 checkpoint; ask missing questions interactively instead of treating configuration
 defaults as candidate answers. Read saved interview_preferences for confirmed
-runtime/site limits and report format, preserving explicit deferrals. Previously
+runtime/site limits, maximum posting age and report format, preserving explicit deferrals.
+Ask each candidate how old a posting may be before the first search; a sample
+value is not their answer. Use their confirmed freshness_days and synchronize
+both profiles when it changes. Original publication dates control age:
+Greenhouse first_published, not updated_at. Older jobs cannot enter the
+document queue; unknown original age requires verification. Previously
 confirmed preferences remain valid even if saved outside this object; ask only
 for genuinely missing answers. In a manual
 chat, confirm concrete limits for that run if unresolved. In an unattended run,

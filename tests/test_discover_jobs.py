@@ -20,6 +20,60 @@ sys.modules[SPEC.name] = discover_jobs
 SPEC.loader.exec_module(discover_jobs)
 
 
+class GreenhousePublicationDateTests(unittest.TestCase):
+    def discover(self, published: str | None, maximum: int) -> discover_jobs.JobPosting:
+        item = {
+            "id": 123, "title": "Registered Nurse",
+            "absolute_url": "https://boards.greenhouse.io/example/jobs/123",
+            "location": {"name": "Berlin, Germany"},
+            "content": "Patient care and triage.",
+            "updated_at": "2026-06-29T12:00:00Z",
+        }
+        if published is not None:
+            item["first_published"] = published
+        with mock.patch.object(discover_jobs, "request_json", return_value={"jobs": [item]}):
+            jobs = discover_jobs.GreenhouseAdapter("https://boards.greenhouse.io/example").discover(
+                {"name": "Example"},
+                {"title_targets": ["Registered Nurse"], "strong_keywords": ["patient care"]},
+                discover_jobs.dt.date(2026, 6, 30), maximum, [],
+            )
+        return jobs[0]
+
+    def test_recent_update_does_not_hide_old_original_publication(self) -> None:
+        job = self.discover("2026-04-01T12:00:00Z", 14)
+        self.assertEqual(job.posted_on, "2026-04-01")
+        self.assertEqual(job.posted_age_days, 90)
+        self.assertIn("first_published", job.date_basis)
+        self.assertEqual(job.decision, "Needs Freshness Verification")
+
+    def test_candidate_limits_and_inclusive_boundary_are_honored(self) -> None:
+        for maximum, expected in [(7, "Needs Freshness Verification"), (14, "Apply"), (120, "Apply")]:
+            with self.subTest(maximum=maximum):
+                self.assertEqual(self.discover("2026-06-16T12:00:00Z", maximum).decision, expected)
+
+    def test_missing_invalid_and_future_original_dates_need_verification(self) -> None:
+        for published in [None, "", "not-a-date", "2026-07-01T12:00:00Z"]:
+            with self.subTest(published=published):
+                job = self.discover(published, 30)
+                self.assertEqual(job.posted_on, "")
+                self.assertIsNone(job.posted_age_days)
+                self.assertEqual(job.decision, "Needs Freshness Verification")
+                self.assertIn("original publication date", " ".join(job.risk_flags))
+                self.assertNotIn("freshest bucket", " ".join(job.fit_reasons))
+
+    def test_fetch_failure_and_nonrecord_entries_do_not_create_jobs(self) -> None:
+        adapter = discover_jobs.GreenhouseAdapter("https://boards.greenhouse.io/example")
+        errors: list[discover_jobs.DiscoveryError] = []
+        with mock.patch.object(discover_jobs, "request_json", side_effect=URLError("unavailable")):
+            self.assertEqual(adapter.discover({"name": "Example"}, {}, discover_jobs.dt.date(2026, 6, 30), 14, errors), [])
+        self.assertEqual(len(errors), 1)
+        with mock.patch.object(discover_jobs, "request_json", return_value={"jobs": [None]}):
+            self.assertEqual(adapter.discover({"name": "Example"}, {}, discover_jobs.dt.date(2026, 6, 30), 14, []), [])
+        with mock.patch.object(discover_jobs, "request_json", return_value={"jobs": [{"title": "Unrelated role"}]}):
+            jobs = adapter.discover({"name": "Example"}, {}, discover_jobs.dt.date(2026, 6, 30), 14, [])
+        self.assertEqual(jobs[0].decision, "Skip")
+
+
 class BuildSearchTermsTests(unittest.TestCase):
     def test_default_freshness_window_is_sixty_days(self) -> None:
         self.assertEqual(discover_jobs.DEFAULT_MAX_AGE_DAYS, 60)

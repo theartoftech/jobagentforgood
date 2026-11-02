@@ -33,6 +33,32 @@ PROFILE = {
 
 
 class ReviewJobFitTests(unittest.TestCase):
+    def test_confirmed_age_limit_gates_stale_unknown_and_update_only_dates(self) -> None:
+        job = {
+            "company": "ReadyCo", "title": "Principal Software Engineer",
+            "url": "https://example.test/jobs/1", "description": "Requirements: Java engineering.",
+            "decision": "Apply", "fit_score": 95, "verification_status": "official_live",
+            "location": "Remote, United States", "work_model": "Remote",
+            "date_basis": "first_published: 2026-06-16", "posted_age_days": 14,
+        }
+        for maximum, age, basis, eligible in [
+            (7, 14, "first_published", False), (14, 14, "first_published", True),
+            (120, 14, "first_published", True), (30, None, "", False),
+            (30, -1, "first_published", False), (30, 1, "updated_at", False),
+        ]:
+            with self.subTest(maximum=maximum, age=age, basis=basis):
+                profile = {"confirmed_strengths": ["Java"], "resume_core_skills": ["Java"],
+                           "freshness": {"include_max_age_days": maximum}}
+                result = classify_review(
+                    job={**job, "posted_age_days": age, "date_basis": basis}, workflow_profile=profile,
+                )
+                self.assertEqual(result.should_generate_resume, eligible)
+                if not eligible:
+                    self.assertTrue(any("publication" in blocker for blocker in result.hard_blockers))
+        for invalid in [True, 0, 366, "14"]:
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "posting age"):
+                classify_review(job=job, workflow_profile={"freshness": {"include_max_age_days": invalid}})
+
     def test_required_named_cloud_years_are_not_met_by_training(self) -> None:
         profile = {**PROFILE, 'do_not_claim': ['AWS', 'Azure', 'GCP'],
                    'candidate_gap_resolutions': {'AWS': 'limited_exposure: training only', 'Azure': 'do_not_claim', 'GCP': 'limited_exposure: training only'}}
